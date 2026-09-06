@@ -9,7 +9,9 @@ Grimório interativo com as 78 cartas do Tarot Rider-Waite, construído como um 
 - página de detalhes para cada carta;
 - tiragens de uma carta e de três cartas (Passado, Presente e Futuro);
 - imagens armazenadas localmente em `images/cards/`;
-- instalação como aplicativo (PWA), com ícone próprio e funcionamento offline dos recursos visitados.
+- instalação como aplicativo (PWA), com ícone próprio;
+- instalação promovida pela interface nativa do navegador, como no projeto Lenormand;
+- estilos, fontes e todas as 78 cartas armazenados localmente para uso offline completo.
 
 ## Estrutura
 

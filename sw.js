@@ -1,12 +1,17 @@
-const CACHE_NAME = 'tarot-rider-waite-v2-install';
+const CACHE_NAME = 'tarot-rider-waite-v3-offline';
 
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './css/styles.css',
+  './fonts/lora-400.ttf',
+  './fonts/lora-500.ttf',
+  './fonts/lora-600.ttf',
+  './fonts/playfair-display-700.ttf',
   './js/cards.js',
   './js/app.js',
+  './js/tailwindcss.js',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png'
