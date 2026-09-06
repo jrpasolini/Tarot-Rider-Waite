@@ -13,6 +13,8 @@
     const shuffleContainer = document.getElementById('shuffle-animation-container');
     const drawButton = document.getElementById('draw-button');
     const drawThreeButton = document.getElementById('draw-three-button');
+    const installAppButton = document.getElementById('install-app-button');
+    const installAppStatus = document.getElementById('install-app-status');
 
     const propertyMap = {
         naipe: 'Naipe',
@@ -24,6 +26,7 @@
     let currentFilter = { type: null, value: null };
     let currentDetailFromDraw = false;
     let currentDraw = [];
+    let deferredInstallPrompt = null;
 
     const escapeHtml = value => String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -286,6 +289,61 @@
         }, 900 + count * 900);
     }
 
+    function isInstalledApp() {
+        return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    }
+
+    function hideInstallInterface() {
+        installAppButton.classList.add('hidden');
+        installAppStatus.classList.add('hidden');
+        installAppStatus.textContent = '';
+    }
+
+    function prepareInstallExperience() {
+        if (isInstalledApp()) {
+            hideInstallInterface();
+            return;
+        }
+
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        if (isIos) {
+            installAppButton.innerHTML = '<span aria-hidden="true">⇧</span> Como instalar';
+            installAppButton.classList.remove('hidden');
+        }
+    }
+
+    window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installAppButton.innerHTML = '<span aria-hidden="true">⇩</span> Instalar aplicativo';
+        installAppButton.classList.remove('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        hideInstallInterface();
+    });
+
+    installAppButton.addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+
+            if (outcome === 'accepted') {
+                hideInstallInterface();
+            } else {
+                installAppButton.classList.add('hidden');
+                installAppStatus.textContent = 'A instalação foi cancelada. Você ainda pode instalá-lo pelo menu do navegador.';
+                installAppStatus.classList.remove('hidden');
+            }
+            return;
+        }
+
+        installAppStatus.textContent = 'No iPhone ou iPad, toque em Compartilhar e depois em “Adicionar à Tela de Início”.';
+        installAppStatus.classList.toggle('hidden');
+    });
+
     document.querySelectorAll('[data-view]').forEach(button => {
         button.addEventListener('click', () => {
             if (button.dataset.view === 'home-view') {
@@ -320,4 +378,5 @@
 
     populateExploreMenu();
     renderCards();
+    prepareInstallExperience();
 })();

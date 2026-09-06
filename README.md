@@ -9,7 +9,7 @@ Grimório interativo com as 78 cartas do Tarot Rider-Waite, construído como um 
 - página de detalhes para cada carta;
 - tiragens de uma carta e de três cartas (Passado, Presente e Futuro);
 - imagens armazenadas localmente em `images/cards/`;
-- suporte básico a instalação como PWA e cache dos recursos visitados.
+- instalação como aplicativo (PWA), com ícone próprio e funcionamento offline dos recursos visitados.
 
 ## Estrutura
 
@@ -17,6 +17,7 @@ Grimório interativo com as 78 cartas do Tarot Rider-Waite, construído como um 
 - `css/styles.css`: identidade visual e responsividade;
 - `js/cards.js`: dados preservados das 78 cartas;
 - `js/app.js`: navegação, busca, filtros, detalhes e tiragens;
+- `icons/`: ícones próprios do aplicativo em 180, 192 e 512 pixels;
 - `cartas/`: módulo separado reservado para futuras páginas individuais.
 
 As imagens Rider-Waite utilizadas são de domínio público e foram obtidas a partir de uma coleção baseada no acervo do Wikimedia Commons.
