@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grimório Interativo do Tarot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --parchment: #FFF8E7;
+            --ink-black: #2c2c2c;
+            --title-red: #8c3b3b;
+            --border-gold: #c8a86b;
+            --vintage-blue: #5a7b8c;
+            --vintage-green: #6b8c6b;
+            --mystic-purple: #6b4c8c;
+        }
+
+        body {
+            background-color: var(--parchment);
+            color: var(--ink-black);
+            font-family: 'Lora', serif;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--title-red);
+        }
+
+        .vintage-border {
+            border: 10px solid transparent;
+            border-image: url('https://i.imgur.com/gI9gY7U.png') 30 round;
+            padding: 2rem;
+            background-color: rgba(245, 238, 218, 0.8);
+        }
+
+        .card-item-name {
+            font-family: 'Playfair Display', serif;
+            color: var(--title-red);
+            transition: color 0.3s ease;
+        }
+
+        .card-item:hover .card-item-name {
+            color: var(--ink-black);
+        }
+
+        .card-item img {
+            transition: transform 0.3s ease, filter 0.3s ease;
+            filter: sepia(0.3);
+        }
+
+        .card-item:hover img {
+            transform: scale(1.05);
+            filter: sepia(0);
+        }
+
+        .modal-bg-fogo {
+            background-image: url('https://www.transparenttextures.com/patterns/worn-dots.png'), linear-gradient(to top, #4a0404, #9d2222);
+            color: white;
+        }
+
+        .modal-bg-fogo h3,
+        .modal-bg-fogo .symbol {
+            color: #ffc2c2;
+        }
+
+        .modal-bg-agua {
+            background-image: url('https://www.transparenttextures.com/patterns/worn-dots.png'), linear-gradient(to top, #042f4a, #226f9d);
+            color: white;
+        }
+
+        .modal-bg-agua h3,
+        .modal-bg-agua .symbol {
+            color: #c2faff;
+        }
+
+        .modal-bg-ar {
+            background-image: url('https://www.transparenttextures.com/patterns/worn-dots.png'), linear-gradient(to top, #e8dcb3, #f5eeda);
+            color: var(--ink-black);
+        }
+
+        .modal-bg-ar h3,
+        .modal-bg-ar .symbol {
+            color: var(--title-red);
+        }
+
+        .modal-bg-terra {
+            background-image: url('https://www.transparenttextures.com/patterns/worn-dots.png'), linear-gradient(to top, #2e4a04, #5a9d22);
+            color: white;
+        }
+
+        .modal-bg-terra h3,
+        .modal-bg-terra .symbol {
+            color: #d1ffc2;
+        }
+
+        .modal-content-container {
+            max-height: 85vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-gold) var(--parchment);
+        }
+
+        .modal-content-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content-container::-webkit-scrollbar-track {
+            background: var(--parchment);
+        }
+
+        .modal-content-container::-webkit-scrollbar-thumb {
+            background-color: var(--border-gold);
+            border-radius: 6px;
+            border: 2px solid var(--parchment);
+        }
+
+        .shuffle-container {
+            perspective: 1000px;
+        }
+
+        .card-flip {
+            position: relative;
+            width: 150px;
+            height: 258px;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+        }
+
+        .card-flip.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-back {
+            background-color: var(--vintage-blue);
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            border: 5px solid var(--border-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--border-gold);
+        }
+
+        .card-front {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <header class="text-center p-8 vintage-border m-4 md:m-8">
+        <h1 class="text-5xl md:text-7xl mb-2">Almanaque de Tarot</h1>
+        <p class="text-xl">Um guia interativo para o deck Rider-Waite</p>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+
+        <section id="oraculo" class="mb-12 vintage-border">
+            <h2 class="text-4xl text-center mb-6">Oráculo Diário</h2>
+            <div id="oraculo-content" class="text-center">
+                <p class="mb-6 text-lg">Precisa de um conselho ou uma reflexão? Tire uma carta aleatória e descubra a
+                    sua mensagem para hoje.</p>
+                <button id="draw-card-btn"
+                    class="bg-title-red text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-red-800 transition-all duration-300 text-xl mx-2 mb-4">Tirar
+                    uma Carta</button>
+                <button id="draw-three-cards-btn"
+                    class="bg-mystic-purple text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-purple-900 transition-all duration-300 text-xl mx-2 mb-4">Tirar
+                    Três Cartas</button>
+                <div id="card-draw-area"
+                    class="mt-8 min-h-[350px] flex flex-col md:flex-row items-center justify-center gap-8"></div>
+            </div>
+        </section>
+
+        <section id="grimorio" class="mb-12 vintage-border">
+            <h2 class="text-4xl text-center mb-6">O Tarot Rider-Waite Completo</h2>
+            <div id="search-nav" class="mb-8 p-4 bg-parchment/50 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input type="text" id="search-box" placeholder="Pesquisar por nome..."
+                        class="p-2 rounded-md border-2 border-border-gold bg-parchment focus:outline-none focus:border-title-red">
+                    <select id="filter-suit"
+                        class="p-2 rounded-md border-2 border-border-gold bg-parchment focus:outline-none focus:border-title-red">
+                        <option value="">Filtrar por Naipe</option>
+                        <option value="Arcanos Maiores">Arcanos Maiores</option>
+                        <option value="Paus">Paus</option>
+                        <option value="Copas">Copas</option>
+                        <option value="Espadas">Espadas</option>
+                        <option value="Ouros">Ouros</option>
+                    </select>
+                    <select id="filter-element"
+                        class="p-2 rounded-md border-2 border-border-gold bg-parchment focus:outline-none focus:border-title-red">
+                        <option value="">Filtrar por Elemento</option>
+                        <option value="Fogo">Fogo</option>
+                        <option value="Água">Água</option>
+                        <option value="Ar">Ar</option>
+                        <option value="Terra">Terra</option>
+                    </select>
+                    <button id="reset-filters"
+                        class="bg-vintage-blue text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:bg-blue-800 transition-all duration-300">Limpar
+                        Filtros</button>
+                </div>
+            </div>
+            <p id="no-results" class="text-center text-xl hidden">Nenhuma carta encontrada.</p>
+            <div id="card-gallery"
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6">
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center p-6 mt-12 bg-black bg-opacity-10">
+        <p class="text-sm text-ink-black/70">&copy; 2025 - Desenvolvido por Antonio Pasolini e Renata Sheila.</p>
+    </footer>
+
+    <div id="card-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div id="modal-content" class="vintage-border w-full max-w-5xl relative">
+            <button id="close-modal"
+                class="absolute -top-5 -right-5 text-parchment bg-title-red rounded-full h-12 w-12 text-2xl font-bold flex items-center justify-center border-4 border-parchment">&times;</button>
+            <div class="modal-content-container p-2 md:p-6 grid grid-cols-1 md:grid-cols-5 gap-6">
+                <div class="md:col-span-2 flex flex-col items-center">
+                    <h3 id="modal-card-name" class="text-3xl mb-4 text-center"></h3>
+                    <img id="modal-card-image" src="" alt="" class="w-full max-w-xs rounded-lg shadow-lg">
+                </div>
+                <div id="modal-card-details" class="md:col-span-3 text-base">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const tarotDeck = [
+            {
+                "nome": "O Louco",
+                "numero": 0,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg",
+                "descricao": "O Louco está à beira de um precipício, olhando para o céu, alheio ao perigo. Ele simboliza o início de uma jornada, pureza de intenção e um salto de fé. Carrega uma pequena trouxa com seus pertences, significando que só leva o essencial. Seu cão o alerta do perigo, mas também o incentiva a seguir. Representa potencial ilimitado, espontaneidade e a inocência de um novo começo.",
+                "interpretacao_imagem": "A figura andrógina olha para cima, para o espiritual, em vez de para baixo, para o material. O penhasco representa o desconhecido. A rosa branca na mão esquerda simboliza pureza e inocência. O cão branco é o instinto e a lealdade. As montanhas nevadas ao fundo são os desafios futuros, que ainda não são a sua preocupação principal. O sol brilhante é otimismo.",
+                "palavras_chave": ["Início", "Inocência", "Espontaneidade", "Espírito livre", "Salto de fé", "Potencial", "Aventura"],
+                "palavras_chave_invertido": ["Imprudência", "Ingenuidade", "Risco desnecessário", "Estagnação", "Medo de começar"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa um salto de fé e o início de uma jornada com potencial ilimitado, mas o resultado é desconhecido e depende das escolhas feitas.",
+                "signo": "Urano (Moderno)",
+                "planeta": "Urano",
+                "referencias_cabalisticas": "Caminho 11 (Kether a Chokmah), Letra Aleph (א)",
+                "cristais": ["Ágata de Musgo", "Aventurina"],
+                "ervas": ["Lavanda", "Ginseng"],
+                "aromaterapia": ["Olíbano"]
+            },
+            {
+                "nome": "O Mago",
+                "numero": 1,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg",
+                "descricao": "O Mago é o mestre da manifestação. Com uma mão apontando para o céu e outra para a terra, ele canaliza a energia divina para o plano material. Ele possui todas as ferramentas (os quatro naipes) à sua disposição, simbolizando que tem todos os recursos necessários para alcançar seus objetivos. O símbolo do infinito sobre sua cabeça representa potencial ilimitado e maestria.",
+                "interpretacao_imagem": "O gesto 'assim em cima, como embaixo' indica sua função de canal. A mesa com os quatro naipes (Paus, Copas, Espadas, Ouros) mostra seu domínio sobre os quatro elementos e reinos da vida. As rosas e lírios que o cercam simbolizam a manifestação da beleza e pureza através de suas ações. O cinto de Ouroboros (cobra que morde a própria cauda) representa a eternidade e o poder cíclico.",
+                "palavras_chave": ["Manifestação", "Poder", "Habilidade", "Força de vontade", "Ação", "Recursos"],
+                "palavras_chave_invertido": ["Manipulação", "Engano", "Potencial não utilizado", "Falta de ação"],
+                "elemento": "Ar",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza manifestação, poder e a posse de todas as ferramentas necessárias para alcançar objetivos. É uma carta de ação direta e sucesso.",
+                "signo": "Mercúrio",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Caminho 12 (Kether a Binah), Letra Beth (ב)",
+                "cristais": ["Quartzo Transparente", "Olho de Tigre", "Labradorita"],
+                "ervas": ["Manjericão", "Alecrim"],
+                "aromaterapia": ["Hortelã-pimenta"]
+            },
+            {
+                "nome": "A Sacerdotisa",
+                "numero": 2,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg",
+                "descricao": "A Sacerdotisa é a guardiã do subconsciente e dos mistérios. Sentada entre dois pilares, Boaz (negro) e Jachin (branco), ela representa o equilíbrio entre as dualidades. Ela detém o conhecimento secreto, simbolizado pelo pergaminho da TORA em seu colo. A Sacerdotisa nos convida a olhar para dentro, confiar na intuição e prestar atenção aos nossos sonhos e à nossa voz interior.",
+                "interpretacao_imagem": "Os pilares representam o Templo de Salomão, a entrada para o conhecimento sagrado. O véu atrás dela, decorado com romãs, esconde as águas do inconsciente; só os iniciados podem passar. A cruz em seu peito simboliza o equilíbrio entre os quatro elementos. A coroa de Ísis e a lua crescente a seus pés a conectam ao divino feminino, à intuição e aos ciclos.",
+                "palavras_chave": ["Intuição", "Subconsciente", "Mistério", "Segredos", "Sabedoria", "Espiritualidade"],
+                "palavras_chave_invertido": ["Segredos revelados", "Intuição bloqueada", "Superficialidade", "Confusão"],
+                "elemento": "Água",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Lida com intuição, mistérios e conhecimento oculto. A resposta não é clara e requer uma análise interior, não uma ação externa imediata.",
+                "signo": "Lua",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Caminho 13 (Kether a Tiphareth), Letra Gimel (ג)",
+                "cristais": ["Pedra da Lua", "Selenita", "Lápis-lazúli"],
+                "ervas": ["Artemísia", "Jasmim"],
+                "aromaterapia": ["Sândalo"]
+            },
+            {
+                "nome": "A Imperatriz",
+                "numero": 3,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg",
+                "descricao": "A Imperatriz é o arquétipo da Mãe Terra. Ela representa a fertilidade, a criação, a abundância, a sensualidade e o cuidado. Sentada em um trono confortável no meio da natureza exuberante, ela simboliza o poder da criação em todas as suas formas: seja gerar vida, arte, ou novas ideias. Ela nos encoraja a nos conectarmos com a beleza, a nutrir a nós mesmos e aos outros, e a desfrutar dos prazeres sensoriais da vida.",
+                "interpretacao_imagem": "Seu trono no meio de um campo de trigo simboliza a colheita e a abundância. A coroa de doze estrelas representa seu domínio sobre o zodíaco e os ciclos do ano. O escudo em forma de coração com o símbolo de Vênus reforça sua conexão com o amor, a beleza e a criatividade. O rio que flui representa a vida e as emoções. Seu vestido estampado com romãs simboliza a fertilidade.",
+                "palavras_chave": ["Fertilidade", "Abundância", "Natureza", "Maternidade", "Criatividade", "Beleza", "Nutrição"],
+                "palavras_chave_invertido": ["Bloqueio criativo", "Dependência", "Negligência", "Estagnação"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É a carta da abundância, fertilidade, criatividade e nutrição. Indica um resultado positivo e frutífero.",
+                "signo": "Vênus",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Caminho 14 (Chokmah a Binah), Letra Daleth (ד)",
+                "cristais": ["Quartzo Rosa", "Esmeralda", "Peridoto"],
+                "ervas": ["Rosa", "Sândalo"],
+                "aromaterapia": ["Rosa"]
+            },
+            {
+                "nome": "O Imperador",
+                "numero": 4,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg",
+                "descricao": "O Imperador é a contraparte da Imperatriz, representando estrutura, ordem, autoridade e controle. Ele é a figura paterna, o líder que estabelece regras e fronteiras para criar segurança e estabilidade. Sentado em um trono de pedra, ele simboliza a solidez e a lógica. O Imperador nos ensina sobre disciplina, responsabilidade e o poder da liderança estratégica para construir um legado duradouro.",
+                "interpretacao_imagem": "O trono de pedra adornado com cabeças de carneiro representa seu signo, Áries, e sua natureza forte e determinada. A armadura sob seu manto vermelho mostra que ele está sempre pronto para defender seu reino. O cetro com o Ankh simboliza seu poder e autoridade sobre a vida, enquanto o globo em sua outra mão representa seu domínio. As montanhas áridas atrás dele indicam a rigidez de sua soberania, mas também a ausência de vida e emoção.",
+                "palavras_chave": ["Autoridade", "Estrutura", "Controle", "Liderança", "Disciplina", "Paternidade", "Ordem"],
+                "palavras_chave_invertido": ["Tirania", "Rigidez", "Abuso de poder", "Falta de controle", "Indisciplina"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa estrutura, controle, autoridade e fundações sólidas. Indica um resultado afirmativo e estável.",
+                "signo": "Áries",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Caminho 15 (Chokmah a Tiphareth), Letra Heh (ה)",
+                "cristais": ["Jaspe Vermelho", "Rubi", "Granada"],
+                "ervas": ["Gengibre", "Cedro"],
+                "aromaterapia": ["Cedro"]
+            },
+            {
+                "nome": "O Hierofante",
+                "numero": 5,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg",
+                "descricao": "O Hierofante, ou Papa, representa a tradição, as instituições, a educação formal e os sistemas de crenças. Ele é o guardião do conhecimento convencional e o mestre que transmite a sabedoria estabelecida. Esta carta fala sobre seguir regras, pertencer a um grupo e aprender com mentores ou professores. Ela pode indicar a necessidade de se conformar a certas estruturas ou de procurar orientação em fontes tradicionais.",
+                "interpretacao_imagem": "Sentado em um trono dentro de uma instituição religiosa, o Hierofante faz um gesto de bênção. Os dois acólitos aos seus pés representam a transmissão de conhecimento. As chaves cruzadas são as chaves para o conhecimento e os mistérios. Seu báculo de três níveis simboliza seu domínio sobre os três mundos (físico, mental, espiritual). Ele representa a ponte entre o divino e a humanidade através da tradição.",
+                "palavras_chave": ["Tradição", "Instituições", "Educação", "Mentor", "Crenças", "Conformidade", "Grupo"],
+                "palavras_chave_invertido": ["Rebelião", "Inconformismo", "Quebra de regras", "Novas abordagens"],
+                "elemento": "Terra",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "A resposta depende da conformidade com tradições e regras. Se a questão se alinha com o convencional, é um sim; caso contrário, é um não.",
+                "signo": "Touro",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Caminho 16 (Chokmah a Chesed), Letra Vav (ו)",
+                "cristais": ["Selenita", "Jade", "Lápis-lazúli"],
+                "ervas": ["Sálvia", "Incenso"],
+                "aromaterapia": ["Olíbano"]
+            },
+            {
+                "nome": "Os Amantes",
+                "numero": 6,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_06_Lovers.jpg",
+                "descricao": "Os Amantes representam a união, as parcerias, a harmonia e as escolhas. Mais do que apenas romance, esta carta fala sobre o alinhamento de valores e a tomada de decisões importantes que definem quem somos. A presença de Adão, Eva e o anjo Rafael no Jardim do Éden simboliza a escolha entre a tentação e a consciência superior, e a importância da comunicação e do equilíbrio em todos os tipos de relacionamentos.",
+                "interpretacao_imagem": "Adão olha para Eva (o consciente para o inconsciente), que olha para o anjo (o inconsciente para o superconsciente). A Árvore do Conhecimento com a serpente atrás de Eva representa a tentação e as escolhas. A Árvore da Vida com chamas atrás de Adão simboliza a paixão. O anjo abençoa a união, indicando que a escolha certa leva à harmonia divina. A montanha ao fundo representa os desafios e o clímax de uma decisão.",
+                "palavras_chave": ["União", "Relacionamentos", "Escolhas", "Harmonia", "Amor", "Alinhamento de valores"],
+                "palavras_chave_invertido": ["Conflito", "Desarmonia", "Má escolha", "Desalinhamento"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Esta carta representa uma escolha significativa. O resultado depende inteiramente da decisão que será tomada.",
+                "signo": "Gêmeos",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Caminho 17 (Binah a Tiphareth), Letra Zain (ז)",
+                "cristais": ["Quartzo Rosa", "Ágata", "Alexandrita"],
+                "ervas": ["Rosa", "Lavanda"],
+                "aromaterapia": ["Lavanda"]
+            },
+            {
+                "nome": "O Carro",
+                "numero": 7,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg",
+                "descricao": "O Carro é a carta da vitória, da determinação e do controle da força de vontade. O condutor guia sua carruagem, puxada por duas esfinges opostas, sem usar rédeas, mostrando que seu controle vem da mente e da disciplina. Esta carta simboliza a superação de obstáculos, o sucesso em empreendimentos e a capacidade de direcionar forças conflitantes para um objetivo comum. É um sinal para avançar com confiança e foco.",
+                "interpretacao_imagem": "As duas esfinges (preta e branca) representam as dualidades (positivo/negativo, consciente/inconsciente) que precisam ser controladas. A ausência de rédeas indica controle mental. O dossel de estrelas simboliza a influência celestial e a proteção. A armadura do condutor representa proteção e prontidão. A cidade ao fundo é o que ele deixou para trás em sua busca pela vitória.",
+                "palavras_chave": ["Vitória", "Controle", "Força de vontade", "Determinação", "Sucesso", "Jornada", "Ambição"],
+                "palavras_chave_invertido": ["Falta de controle", "Direção perdida", "Agressão", "Obstáculos"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É a carta da vitória, determinação e superação de obstáculos através da força de vontade. Um claro sinal para avançar.",
+                "signo": "Câncer",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Caminho 18 (Binah a Geburah), Letra Cheth (ח)",
+                "cristais": ["Cornalina", "Turmalina Negra", "Crisocola"],
+                "ervas": ["Manjericão", "Funcho"],
+                "aromaterapia": ["Camomila"]
+            },
+            {
+                "nome": "A Força",
+                "numero": 8,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg",
+                "descricao": "A Força não fala de poder bruto, mas de coragem interior, paciência e compaixão. A mulher que domina o leão gentilmente mostra que a verdadeira força vem do autocontrole e da persuasão, não da dominação. Esta carta representa o domínio sobre nossos instintos, paixões e medos, integrando-os com amor e aceitação. É um símbolo de resiliência, autoconfiança e do poder do espírito sobre a matéria.",
+                "interpretacao_imagem": "A mulher abrindo as mandíbulas do leão com calma mostra a força interior. O símbolo do infinito sobre sua cabeça (como o do Mago) indica poder espiritual ilimitado. A grinalda de flores em sua cabeça e cintura simboliza a beleza e a graça de sua força. O leão representa nossos instintos, desejos e ego, que são domados, não destruídos.",
+                "palavras_chave": ["Força interior", "Coragem", "Compaixão", "Autocontrole", "Paciência", "Resiliência"],
+                "palavras_chave_invertido": ["Fraqueza", "Insegurança", "Dúvida", "Medo", "Força bruta"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Indica coragem interior, paciência e a capacidade de superar desafios com compaixão e autocontrole, levando a um resultado positivo.",
+                "signo": "Leão",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Caminho 19 (Chesed a Geburah), Letra Teth (ט)",
+                "cristais": ["Olho de Tigre", "Citrino", "Granada"],
+                "ervas": ["Alecrim", "Tomilho"],
+                "aromaterapia": ["Gengibre"]
+            },
+            {
+                "nome": "O Eremita",
+                "numero": 9,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg",
+                "descricao": "O Eremita representa a busca pela sabedoria interior através da introspecção e do isolamento. Ele se afasta do mundo para encontrar a verdade dentro de si mesmo. Com sua lanterna, ele ilumina seu próprio caminho e também serve de guia para outros que buscam conhecimento. Esta carta sugere um período de reflexão, meditação e autodescoberta, onde as respostas não estão no exterior, mas no silêncio da nossa própria alma.",
+                "interpretacao_imagem": "O homem idoso simboliza a sabedoria adquirida com o tempo. Ele está no topo de uma montanha, indicando realização e distanciamento. A lanterna contém a Estrela de Salomão, um símbolo de sabedoria. Seu cajado representa poder e autoridade baseados no autoconhecimento. Seu manto cinza simboliza a neutralidade e a introspecção.",
+                "palavras_chave": ["Introspecção", "Busca interior", "Sabedoria", "Guia", "Isolamento", "Reflexão", "Alma"],
+                "palavras_chave_invertido": ["Solidão", "Isolamento excessivo", "Reclusão", "Medo de si mesmo"],
+                "elemento": "Terra",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Sugere um período de introspecção e busca por respostas internas. A ação externa e os resultados imediatos estão em pausa.",
+                "signo": "Virgem",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Caminho 20 (Chesed a Tiphareth), Letra Yod (י)",
+                "cristais": ["Ametista", "Quartzo Fumê", "Safira"],
+                "ervas": ["Sálvia", "Tomilho"],
+                "aromaterapia": ["Cipreste"]
+            },
+            {
+                "nome": "Roda da Fortuna",
+                "numero": 10,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg",
+                "descricao": "A Roda da Fortuna simboliza os ciclos da vida, o destino, a sorte e as mudanças inevitáveis. A vida está em constante movimento, com altos e baixos. Esta carta nos lembra que nada é permanente. Se você está por baixo, a roda vai girar e te levar para cima. Se está por cima, esteja preparado para a descida. Ela representa pontos de virada, carma e a intervenção do destino em nossas vidas.",
+                "interpretacao_imagem": "A roda contém símbolos alquímicos e as letras TARO (ou ROTA). A esfinge no topo representa o equilíbrio e o conhecimento dos mistérios. A serpente descendo e Anúbis subindo simbolizam os ciclos de queda e ascensão. As quatro figuras nos cantos (anjo, águia, leão, touro) são os quatro signos fixos do zodíaco e os quatro evangelistas, observando os ciclos imutáveis do universo.",
+                "palavras_chave": ["Mudança", "Ciclos", "Sorte", "Destino", "Ponto de virada", "Carma"],
+                "palavras_chave_invertido": ["Má sorte", "Resistência à mudança", "Ciclos negativos", "Estar preso"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa a mudança, os ciclos e a intervenção do destino. O resultado está em fluxo e pode mudar inesperadamente.",
+                "signo": "Júpiter",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Caminho 21 (Chesed a Netzach), Letra Kaph (כ)",
+                "cristais": ["Aventurina", "Opala", "Turquesa"],
+                "ervas": ["Trevo", "Dente-de-leão"],
+                "aromaterapia": ["Vetiver"]
+            },
+            {
+                "nome": "A Justiça",
+                "numero": 11,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg",
+                "descricao": "A Justiça representa a verdade, a clareza, a equidade e a lei de causa e efeito. Esta carta nos lembra que nossas ações têm consequências e que seremos responsáveis por elas. Ela segura uma balança para pesar os fatos com imparcialidade e uma espada de dois gumes para aplicar a decisão com razão e precisão. Simboliza decisões justas, questões legais, e a necessidade de agir com integridade e honestidade.",
+                "interpretacao_imagem": "A figura sentada entre dois pilares simboliza equilíbrio e estrutura. A espada erguida representa o poder da razão e a decisão final. A balança simboliza a imparcialidade e a necessidade de pesar todos os lados de uma questão. A coroa com um quadrado indica pensamentos bem ordenados. O sapato que aparece sob o manto lembra que as consequências das ações se manifestam no mundo real.",
+                "palavras_chave": ["Justiça", "Verdade", "Lei", "Causa e efeito", "Equidade", "Clareza", "Responsabilidade"],
+                "palavras_chave_invertido": ["Injustiça", "Desonestidade", "Preconceito", "Falta de responsabilidade"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "O resultado será justo e equilibrado, baseado em ações passadas. Pode ser sim ou não, dependendo do que é merecido.",
+                "signo": "Libra",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Caminho 22 (Geburah a Tiphareth), Letra Lamed (ל)",
+                "cristais": ["Cornalina", "Jade", "Diamante"],
+                "ervas": ["Calêndula", "Aloe Vera"],
+                "aromaterapia": ["Camomila Romana"]
+            },
+            {
+                "nome": "O Enforcado",
+                "numero": 12,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg",
+                "descricao": "O Enforcado representa sacrifício, rendição e a necessidade de ver as coisas de uma nova perspectiva. Pendurado de cabeça para baixo, ele está em um estado de suspensão voluntária, pausando a ação para ganhar sabedoria. Seu rosto sereno mostra que ele não é uma vítima, mas alguém que escolheu este momento de pausa. A carta sugere que, ao soltar o controle e mudar nosso ponto de vista, podemos alcançar uma iluminação profunda.",
+                "interpretacao_imagem": "A posição de cabeça para baixo muda a perspectiva do mundo. O halo ao redor de sua cabeça indica iluminação espiritual. A Cruz Tau da qual ele pende é uma árvore viva, simbolizando que esta pausa leva ao crescimento. As calças vermelhas representam paixão e o corpo físico, enquanto a camisa azul representa a calma espiritual. Ele está voluntariamente em suspensão para obter uma nova visão.",
+                "palavras_chave": ["Suspensão", "Nova perspectiva", "Rendição", "Sacrifício", "Pausa", "Sabedoria"],
+                "palavras_chave_invertido": ["Estagnação", "Sacrifício inútil", "Resistência", "Indecisão"],
+                "elemento": "Água",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Indica uma pausa, suspensão e a necessidade de ver as coisas de outra perspectiva. Não é um tempo para ação ou respostas definitivas.",
+                "signo": "Netuno (Moderno)",
+                "planeta": "Netuno",
+                "referencias_cabalisticas": "Caminho 23 (Geburah a Hod), Letra Mem (מ)",
+                "cristais": ["Ametista", "Água-marinha", "Lápis-lazúli"],
+                "ervas": ["Salgueiro", "Valeriana"],
+                "aromaterapia": ["Mirra"]
+            },
+            {
+                "nome": "A Morte",
+                "numero": 13,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/d7/RWS_Tarot_13_Death.jpg",
+                "descricao": "A carta da Morte raramente significa morte física. Em vez disso, ela simboliza o fim de um ciclo e o começo de outro. É uma carta de transformação profunda, de deixar o velho para trás para que o novo possa nascer. Embora essa mudança possa ser difícil ou dolorosa, ela é necessária para o crescimento. A Morte nos convida a nos desapegarmos do que não nos serve mais e a abraçar a inevitabilidade da mudança para a renovação.",
+                "interpretacao_imagem": "O esqueleto em armadura montado em um cavalo branco mostra que a morte é invencível, mas também purificadora. A bandeira com a rosa mística de cinco pétalas simboliza a beleza e a vida que podem surgir da transformação. Pessoas de todas as classes (rei, bispo, mulher, criança) caem diante dele, mostrando que a mudança é universal. O sol nascendo entre duas torres ao fundo representa a esperança e um novo começo após o fim.",
+                "palavras_chave": ["Fim de ciclo", "Transformação", "Mudança", "Libertação", "Renovação"],
+                "palavras_chave_invertido": ["Resistência à mudança", "Estagnação", "Apego ao passado", "Medo do fim"],
+                "elemento": "Água",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Simboliza o fim de um ciclo. Para a situação atual, a resposta é não, pois uma transformação profunda e um final são necessários.",
+                "signo": "Escorpião",
+                "planeta": "Plutão",
+                "referencias_cabalisticas": "Caminho 24 (Tiphareth a Netzach), Letra Nun (נ)",
+                "cristais": ["Obsidiana", "Turmalina Negra", "Malaquita"],
+                "ervas": ["Artemísia", "Cipreste"],
+                "aromaterapia": ["Cipreste"]
+            },
+            {
+                "nome": "A Temperança",
+                "numero": 14,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg",
+                "descricao": "A Temperança é a carta do equilíbrio, da moderação e da alquimia. O anjo que mistura a água entre duas taças simboliza a fusão de opostos para criar algo novo e harmonioso. Esta carta sugere paciência, cooperação e a busca por um caminho do meio. Ela nos ensina a integrar diferentes aspectos de nossas vidas e de nossa personalidade, encontrando um propósito maior através da harmonia e da sinergia.",
+                "interpretacao_imagem": "O anjo com um pé na água (subconsciente) e outro na terra (consciente) simboliza equilíbrio. A mistura de água entre as taças representa a alquimia e a combinação de forças. O quadrado no peito do anjo com um triângulo dentro simboliza a união da matéria com o espírito. O caminho que leva ao sol nascente ao fundo indica a jornada em direção à iluminação através da moderação.",
+                "palavras_chave": ["Equilíbrio", "Moderação", "Paciência", "Harmonia", "Alquimia", "Propósito"],
+                "palavras_chave_invertido": ["Desequilíbrio", "Excesso", "Impaciência", "Conflito", "Desalinhamento"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa equilíbrio, harmonia e moderação. Sugere um resultado positivo alcançado através da paciência e da integração.",
+                "signo": "Sagitário",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Caminho 25 (Tiphareth a Yesod), Letra Samekh (ס)",
+                "cristais": ["Ametista", "Fluorita", "Quartzo Transparente"],
+                "ervas": ["Sálvia", "Camomila"],
+                "aromaterapia": ["Gerânio"]
+            },
+            {
+                "nome": "O Diabo",
+                "numero": 15,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg",
+                "descricao": "O Diabo representa nossas sombras, vícios, apegos e as limitações que nós mesmos criamos. Ele simboliza a escravidão ao materialismo, ao hedonismo e aos padrões de pensamento negativos. As duas figuras acorrentadas ao seu pedestal têm correntes frouxas, indicando que sua prisão é, em parte, voluntária. Esta carta nos desafia a confrontar nossos medos e dependências para nos libertarmos e recuperarmos nosso poder pessoal.",
+                "interpretacao_imagem": "A figura de Baphomet com o pentagrama invertido simboliza a subversão da espiritualidade. As figuras acorrentadas, um homem e uma mulher, representam a humanidade presa aos seus desejos mais básicos. As correntes frouxas mostram que a libertação é possível. A tocha invertida que o Diabo segura representa a luz da razão usada de forma destrutiva ou para criar ilusão.",
+                "palavras_chave": ["Apego", "Vício", "Escravidão", "Materialismo", "Sombra", "Limitações", "Tentação"],
+                "palavras_chave_invertido": ["Libertação", "Quebra de correntes", "Consciência", "Recuperação do poder"],
+                "elemento": "Terra",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Indica apego, vícios e limitações autoimpostas. É um claro aviso contra a situação em questão.",
+                "signo": "Capricórnio",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Caminho 26 (Tiphareth a Hod), Letra Ayin (ע)",
+                "cristais": ["Obsidiana", "Quartzo Fumê", "Hematita"],
+                "ervas": ["Patchouli", "Mirra"],
+                "aromaterapia": ["Patchouli"]
+            },
+            {
+                "nome": "A Torre",
+                "numero": 16,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg",
+                "descricao": "A Torre simboliza uma mudança súbita, uma crise, uma revelação chocante e a destruição de estruturas falsas. Um raio atinge uma torre, derrubando sua coroa e lançando as pessoas ao chão. Esta carta representa a queda de egos, crenças e situações que foram construídas sobre fundações instáveis. Embora a experiência seja caótica e dolorosa, ela é libertadora, pois permite reconstruir sobre uma base mais verdadeira e autêntica.",
+                "interpretacao_imagem": "A torre representa estruturas (físicas ou mentais) e o ego. O raio é a intervenção divina ou uma verdade súbita que destrói a ilusão. A coroa caindo simboliza a queda do orgulho e da autoridade falsa. As pessoas caindo representam a perda de segurança e a necessidade de abandonar velhas formas. As chamas em forma de Yod (letra hebraica) reforçam a ideia de uma intervenção divina.",
+                "palavras_chave": ["Mudança súbita", "Crise", "Revelação", "Destruição", "Libertação", "Caos"],
+                "palavras_chave_invertido": ["Evitar desastre", "Medo da mudança", "Crise interna", "Resistência"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Simboliza destruição súbita, crise e caos. É uma das respostas 'não' mais fortes do baralho.",
+                "signo": "Marte",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Caminho 27 (Netzach a Hod), Letra Peh (פ)",
+                "cristais": ["Pedra de Lava", "Rubi", "Rodonita"],
+                "ervas": ["Absinto", "Manjericão"],
+                "aromaterapia": ["Pimenta Preta"]
+            },
+            {
+                "nome": "A Estrela",
+                "numero": 17,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg",
+                "descricao": "A Estrela é a carta da esperança, da fé, da inspiração e da cura. Depois da tempestade da Torre, ela traz uma sensação de calma, otimismo e renovação. A mulher nua sob um céu estrelado derrama a água da vida, nutrindo a terra e reabastecendo as águas do inconsciente. Esta carta é um sinal de que você está no caminho certo, guiado por uma luz divina. Ela encoraja a ter fé no futuro e a acreditar em seus sonhos.",
+                "interpretacao_imagem": "A nudez da mulher simboliza vulnerabilidade e autenticidade. Derramar água na terra e na água representa o equilíbrio entre dar e receber, e a nutrição do consciente e do inconsciente. A grande estrela de oito pontas é a esperança e a orientação. As sete estrelas menores podem ser os chakras ou os planetas. O pássaro Íbis em uma árvore simboliza a sabedoria.",
+                "palavras_chave": ["Esperança", "Fé", "Inspiração", "Cura", "Renovação", "Serenidade", "Propósito"],
+                "palavras_chave_invertido": ["Desesperança", "Falta de fé", "Desânimo", "Desconexão"],
+                "elemento": "Ar",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É a carta da esperança, fé e renovação. Indica um futuro brilhante e um resultado muito positivo.",
+                "signo": "Aquário",
+                "planeta": "Urano",
+                "referencias_cabalisticas": "Caminho 28 (Netzach a Yesod), Letra Tzaddi (צ)",
+                "cristais": ["Água-marinha", "Turquesa", "Crisocola"],
+                "ervas": ["Camomila", "Estrela-de-anis"],
+                "aromaterapia": ["Neroli"]
+            },
+            {
+                "nome": "A Lua",
+                "numero": 18,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg",
+                "descricao": "A Lua representa o inconsciente, a intuição, os sonhos, mas também a ilusão, o medo e a ansiedade. Ela ilumina um caminho misterioso entre duas torres, onde as coisas não são o que parecem. Um cão e um lobo uivam para a lua, representando nossas naturezas domesticada e selvagem. A carta nos adverte sobre enganos e confusão, mas também nos convida a explorar nosso mundo interior e a confiar em nossa intuição para navegar pela escuridão.",
+                "interpretacao_imagem": "A lua com múltiplas fases visíveis simboliza ciclos e ilusão. O caminho que leva entre as duas torres é a jornada através do desconhecido. O lobo e o cão representam nossos medos instintivos e domesticados. A lagosta emergindo da água simboliza os medos profundos e o inconsciente vindo à tona. As gotas de orvalho (Yods) representam a inspiração divina, mesmo na incerteza.",
+                "palavras_chave": ["Inconsciente", "Ilusão", "Medo", "Ansiedade", "Intuição", "Sonhos", "Incerteza"],
+                "palavras_chave_invertido": ["Clareza", "Libertação de medos", "Verdade revelada", "Confusão reprimida"],
+                "elemento": "Água",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa ilusão, medo e incerteza. As coisas não são o que parecem, e a clareza está ausente, tornando a resposta negativa.",
+                "signo": "Peixes",
+                "planeta": "Netuno",
+                "referencias_cabalisticas": "Caminho 29 (Netzach a Malkuth), Letra Qoph (ק)",
+                "cristais": ["Pedra da Lua", "Selenita", "Labradorita"],
+                "ervas": ["Artemísia", "Papoula"],
+                "aromaterapia": ["Ylang Ylang"]
+            },
+            {
+                "nome": "O Sol",
+                "numero": 19,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg",
+                "descricao": "O Sol é uma das cartas mais positivas do baralho. Ela representa alegria, sucesso, vitalidade e clareza. A criança nua montada em um cavalo branco simboliza a inocência e a pureza de desfrutar dos prazeres simples da vida. O sol radiante ilumina tudo, trazendo verdade e compreensão. Esta carta indica um período de grande felicidade, otimismo, confiança e sucesso em todos os empreendimentos. É a celebração da vida.",
+                "interpretacao_imagem": "O sol com um rosto representa a consciência e a vitalidade. A criança nua simboliza a inocência e a alegria sem barreiras. O cavalo branco representa força e pureza. A bandeira vermelha simboliza a ação e a paixão pela vida. Os girassóis ao fundo representam a abundância e a adoração à vida e à luz.",
+                "palavras_chave": ["Alegria", "Sucesso", "Vitalidade", "Clareza", "Otimismo", "Confiança", "Felicidade"],
+                "palavras_chave_invertido": ["Tristeza", "Falta de clareza", "Pessimismo", "Sucesso adiado"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É a carta mais positiva do baralho, indicando alegria, sucesso, clareza e vitalidade. Uma resposta 'sim' inequívoca.",
+                "signo": "Sol",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Caminho 30 (Hod a Yesod), Letra Resh (ר)",
+                "cristais": ["Pedra do Sol", "Citrino", "Topázio Imperial"],
+                "ervas": ["Girassol", "Calêndula"],
+                "aromaterapia": ["Laranja"]
+            },
+            {
+                "nome": "O Julgamento",
+                "numero": 20,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg",
+                "descricao": "O Julgamento é uma carta de despertar, renovação e acerto de contas. O arcanjo Gabriel toca sua trombeta, chamando as pessoas para se levantarem de seus túmulos para um novo nível de consciência. Esta carta representa um momento de avaliação da própria vida, de perdoar o passado e de atender a um chamado superior. É sobre absolvição, renascimento e a integração de todas as nossas experiências para seguir em frente com um propósito renovado.",
+                "interpretacao_imagem": "O arcanjo na nuvem representa um chamado divino. As pessoas nuas se levantando dos túmulos simbolizam o renascimento e a libertação de limitações passadas. Elas olham para cima, aceitando o chamado. A bandeira com a cruz representa a ressurreição e o equilíbrio. A água ao fundo pode simbolizar o inconsciente do qual estamos emergindo.",
+                "palavras_chave": ["Julgamento", "Despertar", "Renovação", "Chamado", "Absolvição", "Propósito"],
+                "palavras_chave_invertido": ["Autocrítica", "Dúvida", "Culpa", "Evitar decisões", "Medo do julgamento"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa um despertar e uma avaliação. O resultado depende do acerto de contas com o passado e do atendimento a um chamado superior.",
+                "signo": "Plutão (Moderno)",
+                "planeta": "Plutão",
+                "referencias_cabalisticas": "Caminho 31 (Hod a Malkuth), Letra Shin (ש)",
+                "cristais": ["Hematita", "Azurita", "Malaquita"],
+                "ervas": ["Manjerona", "Valeriana"],
+                "aromaterapia": ["Manjericão"]
+            },
+            {
+                "nome": "O Mundo",
+                "numero": 21,
+                "naipe": "Arcanos Maiores",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg",
+                "descricao": "O Mundo é a carta final dos Arcanos Maiores e representa a conclusão bem-sucedida, a realização e a integração. A dançarina no centro da grinalda celebra o fim de uma jornada e o início de outra em um nível superior. Ela alcançou um estado de totalidade e harmonia com o universo. Esta carta simboliza sucesso, realização, viagens e a sensação de estar exatamente onde você deveria estar.",
+                "interpretacao_imagem": "A figura dançante no centro de uma mandorla (grinalda oval) representa a conclusão e a totalidade. Ela segura dois bastões, simbolizando o equilíbrio dos poderes. As quatro figuras nos cantos (anjo, águia, leão, touro) representam a integração dos quatro elementos e a harmonia do cosmos. A dança é de celebração e liberdade, indicando o fim bem-sucedido da Jornada do Louco.",
+                "palavras_chave": ["Conclusão", "Realização", "Integração", "Sucesso", "Totalidade", "Viagem", "Harmonia"],
+                "palavras_chave_invertido": ["Incompletude", "Falta de fechamento", "Estagnação", "Algo faltando"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza a conclusão bem-sucedida, a realização e a integração. É um 'sim' definitivo, indicando o sucesso completo.",
+                "signo": "Saturno",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Caminho 32 (Yesod a Malkuth), Letra Tav (ת)",
+                "cristais": ["Ônix", "Lápis-lazúli", "Fluorita"],
+                "ervas": ["Louro", "Hera"],
+                "aromaterapia": ["Vetiver"]
+            },
+            {
+                "nome": "Ás de Paus",
+                "numero": 1,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/1/11/Wands01.jpg",
+                "descricao": "O Ás de Paus simboliza um novo começo cheio de energia, inspiração e potencial. Uma mão divina oferece um bastão que brota, representando o despertar da criatividade, da paixão e da força de vontade. É um chamado para a ação, para iniciar novos projetos e para seguir com entusiasmo uma nova ideia ou aventura. Esta carta é a semente da criação.",
+                "interpretacao_imagem": "A mão saindo de uma nuvem representa um presente divino ou uma inspiração súbita. O bastão com folhas verdes simboliza crescimento, vida e potencial. A paisagem fértil com um castelo ao fundo indica que esta nova energia tem o potencial para construir algo sólido e duradouro.",
+                "palavras_chave": ["Inspiração", "Novo começo", "Energia", "Potencial", "Criatividade", "Paixão"],
+                "palavras_chave_invertido": ["Atrasos", "Falta de energia", "Bloqueio criativo", "Falsos começos"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa um novo começo cheio de energia, inspiração e potencial. É um sinal verde para a ação.",
+                "signo": "Áries, Leão, Sagitário",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Kether em Atziluth",
+                "cristais": ["Cornalina", "Jaspe Vermelho"],
+                "ervas": ["Canela", "Cravo"],
+                "aromaterapia": ["Canela"]
+            },
+            {
+                "nome": "Dois de Paus",
+                "numero": 2,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Wands02.jpg",
+                "descricao": "O Dois de Paus representa o planejamento e a tomada de decisões. Um homem poderoso olha para o mundo de seu castelo, segurando um globo. Ele já alcançou algum sucesso, mas agora contempla o futuro e as possibilidades de expansão. É uma carta sobre ter uma visão, planejar os próximos passos e ter a coragem de sair da zona de conforto para explorar novos territórios.",
+                "interpretacao_imagem": "O homem no topo do castelo simboliza o poder e a conquista. O globo em sua mão representa suas ambições e o mundo de possibilidades. Um bastão está seguro na parede (suas conquistas passadas), enquanto ele se apoia no outro (seus planos futuros). Ele olha para a paisagem, avaliando suas opções.",
+                "palavras_chave": ["Planejamento", "Decisão", "Visão de futuro", "Expansão", "Coragem"],
+                "palavras_chave_invertido": ["Medo do desconhecido", "Falta de planejamento", "Ficar na zona de conforto"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "É uma carta de planejamento e contemplação do futuro. A ação ainda não foi tomada, portanto o resultado é incerto.",
+                "signo": "Áries",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Chokmah em Atziluth (Marte em Áries)",
+                "cristais": ["Olho de Tigre", "Aventurina"],
+                "ervas": ["Gengibre", "Alecrim"],
+                "aromaterapia": ["Gengibre"]
+            },
+            {
+                "nome": "Três de Paus",
+                "numero": 3,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Wands03.jpg",
+                "descricao": "O Três de Paus simboliza a espera pelos resultados das ações iniciais. A figura observa os navios partindo, representando seus empreendimentos que foram colocados em movimento. É uma carta de previsão, expansão e de ver seus planos começarem a se concretizar. Há um sentimento de otimismo e confiança de que o que foi enviado ao mundo trará bons frutos.",
+                "interpretacao_imagem": "A figura de costas, no alto de um penhasco, mostra uma posição de poder e visão. Os três bastões fincados no chão representam a solidez de seus planos. Os navios no mar simbolizam o comércio, a exploração e a chegada de oportunidades. A cor amarela da cena reforça o otimismo e a clareza.",
+                "palavras_chave": ["Expansão", "Previsão", "Espera", "Progresso", "Comércio", "Oportunidade"],
+                "palavras_chave_invertido": ["Atrasos", "Obstáculos", "Falta de visão", "Planos frustrados"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Indica progresso, expansão e a concretização inicial dos planos. A energia está se movendo em uma direção positiva.",
+                "signo": "Áries",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Binah em Atziluth (Sol em Áries)",
+                "cristais": ["Citrino", "Pirita"],
+                "ervas": ["Manjericão", "Louro"],
+                "aromaterapia": ["Olíbano"]
+            },
+            {
+                "nome": "Quatro de Paus",
+                "numero": 4,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Wands04.jpg",
+                "descricao": "O Quatro de Paus é uma carta de celebração, harmonia e estabilidade. Ela representa a alegria de alcançar um marco importante e de compartilhar esse sucesso com a comunidade. Pode simbolizar casamentos, festas, a compra de uma casa nova ou qualquer evento que traga um sentimento de segurança e felicidade. É um momento de paz e contentamento após o trabalho duro.",
+                "interpretacao_imagem": "Os quatro bastões formam um portal decorado com uma grinalda, simbolizando uma passagem para um estado de felicidade. As duas figuras celebrando representam a alegria e a parceria. O castelo ao fundo simboliza a segurança e o lar. A cena é de uma festa comunitária, celebrando a estabilidade alcançada.",
+                "palavras_chave": ["Celebração", "Harmonia", "Lar", "Comunidade", "Estabilidade", "Alegria"],
+                "palavras_chave_invertido": ["Instabilidade", "Conflito doméstico", "Falta de apoio", "Celebração adiada"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza celebração, harmonia e estabilidade. Um resultado feliz e seguro é indicado.",
+                "signo": "Áries",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Chesed em Atziluth (Vênus em Áries)",
+                "cristais": ["Quartzo Rosa", "Selenita"],
+                "ervas": ["Rosa", "Lavanda"],
+                "aromaterapia": ["Gerânio"]
+            },
+            {
+                "nome": "Cinco de Paus",
+                "numero": 5,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Wands05.jpg",
+                "descricao": "O Cinco de Paus representa conflito, competição e desacordo. Cinco homens brandem seus bastões em uma luta caótica. No entanto, não parece ser uma batalha séria, mas sim uma competição ou um debate acalorado. Esta carta sugere um ambiente de rivalidade, onde diferentes ideias e egos se chocam. Pode ser um desafio, mas também uma oportunidade para o crescimento através da troca de diferentes pontos de vista.",
+                "interpretacao_imagem": "Os homens com bastões cruzados representam o choque de vontades e ideias. A falta de ferimentos sugere que o conflito é mais uma competição ou um jogo do que uma guerra. É a energia do Fogo se manifestando de forma desorganizada e competitiva.",
+                "palavras_chave": ["Conflito", "Competição", "Desacordo", "Rivalidade", "Debate", "Caos"],
+                "palavras_chave_invertido": ["Resolução de conflito", "Harmonia", "Evitar conflito", "Conflito interno"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa conflito, competição e luta. A energia é dispersa e caótica, não conduzindo a um resultado favorável.",
+                "signo": "Leão",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Geburah em Atziluth (Saturno em Leão)",
+                "cristais": ["Hematita", "Cornalina"],
+                "ervas": ["Urtiga", "Absinto"],
+                "aromaterapia": ["Eucalipto"]
+            },
+            {
+                "nome": "Seis de Paus",
+                "numero": 6,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Wands06.jpg",
+                "descricao": "O Seis de Paus é a carta da vitória e do reconhecimento público. Após o conflito do Cinco, o sucesso foi alcançado. Um homem em um cavalo branco é aclamado pela multidão, celebrando sua conquista. Esta carta simboliza sucesso, autoconfiança, liderança e a recompensa pelo esforço. É um momento de orgulho e de desfrutar da admiração dos outros.",
+                "interpretacao_imagem": "O homem vitorioso no cavalo branco, com uma coroa de louros, é o herói do momento. O cavalo branco simboliza pureza e sucesso. A multidão aclamando representa o reconhecimento público. O bastão decorado também com louros reforça a ideia de vitória.",
+                "palavras_chave": ["Vitória", "Sucesso", "Reconhecimento", "Aclamação", "Confiança", "Liderança"],
+                "palavras_chave_invertido": ["Arrogância", "Falta de reconhecimento", "Vitória vazia", "Queda"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É a carta da vitória, do sucesso e do reconhecimento público. Um resultado bem-sucedido é claramente indicado.",
+                "signo": "Leão",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Tiphareth em Atziluth (Júpiter em Leão)",
+                "cristais": ["Pedra do Sol", "Pirita"],
+                "ervas": ["Louro", "Girassol"],
+                "aromaterapia": ["Louro"]
+            },
+            {
+                "nome": "Sete de Paus",
+                "numero": 7,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Wands07.jpg",
+                "descricao": "O Sete de Paus representa a defesa de uma posição, a coragem e a perseverança. Um homem em terreno elevado luta contra seis bastões que vêm de baixo. Ele está em uma posição de vantagem, mas precisa continuar lutando para proteger o que conquistou. Esta carta fala sobre defender suas crenças, seu território ou suas realizações contra a oposição. É um teste de resistência e convicção.",
+                "interpretacao_imagem": "A posição elevada do homem lhe dá uma vantagem estratégica. Seus sapatos diferentes podem simbolizar estar com um pé em dois mundos ou uma base instável, apesar da vantagem. Ele luta sozinho contra muitos, representando um desafio pessoal e a necessidade de se manter firme.",
+                "palavras_chave": ["Desafio", "Defesa", "Perseverança", "Coragem", "Manter-se firme", "Convicção"],
+                "palavras_chave_invertido": ["Desistir", "Ser sobrepujado", "Falta de confiança", "Evitar desafios"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Indica a necessidade de defender sua posição. O sucesso é possível, mas requer luta e perseverança, não sendo garantido.",
+                "signo": "Leão",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Netzach em Atziluth (Marte em Leão)",
+                "cristais": ["Olho de Tigre", "Jaspe Vermelho"],
+                "ervas": ["Tomilho", "Gengibre"],
+                "aromaterapia": ["Cedro"]
+            },
+            {
+                "nome": "Oito de Paus",
+                "numero": 8,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Wands08.jpg",
+                "descricao": "O Oito de Paus simboliza velocidade, movimento rápido, ação e comunicação. Oito bastões voam pelo ar em direção ao seu destino. Esta carta indica que os eventos estão se desenrolando rapidamente e que as coisas estão progredindo em ritmo acelerado. Pode representar notícias importantes chegando, viagens aéreas ou a rápida conclusão de projetos. É um momento de energia e progresso sem obstáculos.",
+                "interpretacao_imagem": "Os oito bastões voando em uníssono pelo céu claro representam ação rápida e sem impedimentos. A paisagem pacífica abaixo, com um rio, indica que o caminho está livre para o progresso. Não há pessoas na carta, o que foca a atenção puramente no movimento e na energia.",
+                "palavras_chave": ["Velocidade", "Ação", "Movimento", "Notícias", "Comunicação", "Progresso"],
+                "palavras_chave_invertido": ["Atrasos", "Frustração", "Estagnação", "Más notícias", "Resistência ao movimento"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza movimento rápido, progresso e notícias. As coisas estão avançando rapidamente em uma direção positiva.",
+                "signo": "Sagitário",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Hod em Atziluth (Mercúrio em Sagitário)",
+                "cristais": ["Ametista", "Sodalita"],
+                "ervas": ["Lavanda", "Verbena"],
+                "aromaterapia": ["Lemongrass"]
+            },
+            {
+                "nome": "Nove de Paus",
+                "numero": 9,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Tarot_Nine_of_Wands.jpg",
+                "descricao": "O Nove de Paus é a carta da resiliência, da coragem e da persistência final. Um homem ferido, mas não derrotado, guarda sua posição, pronto para a última batalha. Ele já passou por muito e está cansado, mas não desiste. Esta carta indica que, apesar do cansaço e dos ferimentos, você tem a força para continuar e proteger o que é seu. É o último esforço antes da vitória.",
+                "interpretacao_imagem": "O homem com a cabeça enfaixada mostra que ele já foi ferido em batalhas anteriores. Ele se apoia em seu bastão, cansado, mas alerta. Os oito bastões atrás dele formam uma paliçada, sua defesa. Ele está na defensiva, mas pronto para lutar mais uma vez.",
+                "palavras_chave": ["Resiliência", "Perseverança", "Defesa", "Coragem", "Força final", "Proteção"],
+                "palavras_chave_invertido": ["Cansaço extremo", "Desistir", "Paranoia", "Recusa em se comprometer"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa resiliência e a última etapa de um desafio. A vitória está próxima, mas ainda exige um esforço final, tornando o 'sim' condicional.",
+                "signo": "Sagitário",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Yesod em Atziluth (Lua em Sagitário)",
+                "cristais": ["Pedra de Sangue", "Turmalina Negra"],
+                "ervas": ["Manjericão", "Cravo"],
+                "aromaterapia": ["Tea Tree"]
+            },
+            {
+                "nome": "Dez de Paus",
+                "numero": 10,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Wands10.jpg",
+                "descricao": "O Dez de Paus representa fardos, sobrecarga e responsabilidade excessiva. Um homem carrega um pesado feixe de dez bastões, curvado sob o peso. Ele está quase chegando ao seu destino, mas a jornada é árdua. Esta carta indica que você assumiu muitas tarefas ou responsabilidades e está se sentindo sobrecarregado. É um lembrete para delegar, pedir ajuda ou reavaliar seus compromissos para não se esgotar.",
+                "interpretacao_imagem": "O homem carregando os dez bastões de uma vez simboliza o fardo de ter assumido tudo sozinho. Ele está tão focado em carregar o peso que mal consegue ver o caminho à sua frente. A cidade ao longe representa o objetivo, que parece próximo, mas difícil de alcançar.",
+                "palavras_chave": ["Fardo", "Sobrecarga", "Responsabilidade", "Estresse", "Trabalho duro"],
+                "palavras_chave_invertido": ["Libertar-se de fardos", "Delegar", "Colapso", "Simplificar a vida"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Indica fardos, sobrecarga e responsabilidade excessiva. A situação atual é insustentável.",
+                "signo": "Sagitário",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Malkuth em Atziluth (Saturno em Sagitário)",
+                "cristais": ["Quartzo Fumê", "Hematita"],
+                "ervas": ["Valeriana", "Camomila"],
+                "aromaterapia": ["Manjerona"]
+            },
+            {
+                "nome": "Pajem de Paus",
+                "numero": 11,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Wands11.jpg",
+                "descricao": "O Pajem de Paus é um mensageiro de novas ideias e inspiração. Ele representa a energia jovem do Fogo: entusiasmo, criatividade e um desejo de explorar. Este Pajem está pronto para a aventura e para descobrir novas paixões. Ele pode indicar o início de um novo hobby, um projeto criativo ou a chegada de notícias que despertam seu entusiasmo. É um convite para abraçar a curiosidade e a espontaneidade.",
+                "interpretacao_imagem": "O jovem olha para o bastão que segura com admiração e curiosidade, como se estivesse descobrindo seu próprio potencial. Suas roupas são decoradas com salamandras, um símbolo do elemento Fogo. O deserto ao fundo representa um território novo e inexplorado, pronto para ser descoberto.",
+                "palavras_chave": ["Entusiasmo", "Exploração", "Criatividade", "Novas ideias", "Espírito livre", "Curiosidade"],
+                "palavras_chave_invertido": ["Inquietação", "Falta de direção", "Procrastinação", "Más notícias"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa a exploração de novas ideias e o potencial para a aventura, mas é o início, não a conclusão. O resultado depende de como essa energia é usada.",
+                "signo": "Fogo (Áries, Leão, Sagitário)",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte terrena do Fogo; a Princesa de Paus",
+                "cristais": ["Cornalina", "Aventurina"],
+                "ervas": ["Canela", "Alecrim"],
+                "aromaterapia": ["Laranja"]
+            },
+            {
+                "nome": "Cavaleiro de Paus",
+                "numero": 12,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/1/16/Wands12.jpg",
+                "descricao": "O Cavaleiro de Paus é a personificação da ação, da aventura e da impulsividade. Ele avança com energia e paixão, sem hesitação. Este cavaleiro é charmoso, confiante e está sempre pronto para um desafio. A carta indica um momento de movimento rápido, de agarrar oportunidades e de agir com coragem. No entanto, sua natureza impulsiva pode levá-lo a agir sem pensar nas consequências.",
+                "interpretacao_imagem": "O cavaleiro em seu cavalo empinado está em pleno movimento. Sua armadura e o bastão que ele segura mostram que ele está em uma missão. As salamandras em sua túnica reforçam sua conexão com o Fogo. O cenário árido e as pirâmides podem simbolizar uma jornada por territórios desconhecidos ou uma busca por sabedoria antiga.",
+                "palavras_chave": ["Ação", "Aventura", "Energia", "Paixão", "Impulsividade", "Coragem", "Movimento"],
+                "palavras_chave_invertido": ["Atrasos", "Frustração", "Imprudência", "Falta de direção"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza ação rápida, aventura e movimento para frente. É uma carta de energia e paixão que impulsiona para um resultado afirmativo.",
+                "signo": "Sagitário/Leão",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aérea do Fogo; o Príncipe de Paus",
+                "cristais": ["Jaspe Vermelho", "Granada"],
+                "ervas": ["Gengibre", "Pimenta"],
+                "aromaterapia": ["Pimenta Preta"]
+            },
+            {
+                "nome": "Rainha de Paus",
+                "numero": 13,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Wands13.jpg",
+                "descricao": "A Rainha de Paus é confiante, carismática e cheia de energia. Ela domina a energia do Fogo com graça e maturidade. Ela é otimista, sociável e inspira os outros com sua paixão e determinação. A Rainha sabe quem é e o que quer, e não tem medo de ir atrás de seus objetivos. Ela equilibra sua vida profissional e social com maestria, mantendo sempre sua independência.",
+                "interpretacao_imagem": "Sentada em seu trono, adornado com leões (símbolo de Leão e da força), ela segura um bastão e um girassol (símbolo de alegria e adoração à vida). O gato preto a seus pés representa sua conexão com a intuição e os mistérios, mas também sua independência. Ela é a personificação da confiança e da vitalidade.",
+                "palavras_chave": ["Confiança", "Carisma", "Energia", "Otimismo", "Independência", "Paixão", "Determinação"],
+                "palavras_chave_invertido": ["Insegurança", "Ciúme", "Exigência", "Intolerância"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa confiança, otimismo e determinação. Sua energia positiva e focada leva ao sucesso.",
+                "signo": "Leão/Áries",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aquosa do Fogo; a Rainha de Paus",
+                "cristais": ["Citrino", "Pedra do Sol"],
+                "ervas": ["Girassol", "Calêndula"],
+                "aromaterapia": ["Alecrim"]
+            },
+            {
+                "nome": "Rei de Paus",
+                "numero": 14,
+                "naipe": "Paus",
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Wands14.jpg",
+                "descricao": "O Rei de Paus é o líder visionário. Ele é mestre da energia do Fogo, usando sua paixão e criatividade para inspirar os outros e construir um futuro melhor. Ele é ousado, carismático e tem uma visão clara de seus objetivos. Este Rei não apenas sonha, mas também age para transformar sua visão em realidade. Ele é um empreendedor nato, um líder natural que comanda respeito e lealdade.",
+                "interpretacao_imagem": "O Rei senta-se em seu trono, que, como o da Rainha, é adornado com leões e salamandras, símbolos do Fogo. Ele segura seu bastão como um símbolo de poder. Sua postura é de autoridade relaxada. A salamandra a seus pés representa seu domínio sobre a paixão e a transformação. Ele é um líder que já provou seu valor.",
+                "palavras_chave": ["Liderança", "Visão", "Empreendedorismo", "Ousadia", "Carisma", "Inspiração", "Ação"],
+                "palavras_chave_invertido": ["Tirania", "Impulsividade", "Altas expectativas", "Falta de visão"],
+                "elemento": "Fogo",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza liderança, visão e controle. Indica a capacidade de transformar uma visão em realidade com sucesso.",
+                "signo": "Áries/Sagitário",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte ígnea do Fogo; o Rei de Paus",
+                "cristais": ["Rubi", "Olho de Tigre"],
+                "ervas": ["Cedro", "Sândalo"],
+                "aromaterapia": ["Olíbano"]
+            },
+            {
+                "nome": "Ás de Copas",
+                "naipe": "Copas",
+                "numero": 1,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/36/Cups01.jpg",
+                "descricao": "O Ás de Copas representa um novo começo no reino das emoções, do amor e dos relacionamentos. Uma mão divina oferece uma taça transbordante, da qual cinco correntes de água fluem. É um símbolo de amor incondicional, compaixão, criatividade e o despertar do coração. Esta carta indica o potencial para um novo amor, uma nova amizade ou uma conexão espiritual mais profunda.",
+                "interpretacao_imagem": "A mão saindo de uma nuvem representa um presente divino de amor. A taça com a pomba descendo com uma hóstia na boca simboliza o amor espiritual e a paz. As cinco correntes de água representam os cinco sentidos sendo nutridos pelo amor. A água caindo em um lago com flores de lótus simboliza o despertar da consciência espiritual através das emoções.",
+                "palavras_chave": ["Amor", "Emoções", "Criatividade", "Novo relacionamento", "Compaixão", "Espiritualidade"],
+                "palavras_chave_invertido": ["Emoções reprimidas", "Amor bloqueado", "Coração partido", "Tristeza"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa um novo começo emocional, amor e alegria. É um 'sim' retumbante para questões do coração e da criatividade.",
+                "signo": "Câncer, Escorpião, Peixes",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Kether em Briah",
+                "cristais": ["Quartzo Rosa", "Pedra da Lua"],
+                "ervas": ["Rosa", "Jasmim"],
+                "aromaterapia": ["Rosa"]
+            },
+            {
+                "nome": "Dois de Copas",
+                "naipe": "Copas",
+                "numero": 2,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Cups02.jpg",
+                "descricao": "O Dois de Copas simboliza a união, a parceria e a atração mútua. Um homem e uma mulher trocam taças em um gesto de amor e compromisso. Esta carta representa o início de um relacionamento romântico, uma amizade profunda ou uma parceria de negócios harmoniosa. É sobre a criação de uma conexão baseada no respeito, na igualdade e no afeto mútuo.",
+                "interpretacao_imagem": "A troca de taças é um símbolo de união emocional. O Caduceu de Hermes com a cabeça de um leão alado entre eles representa a paixão, a cura e a comunicação que unem a parceria. A casa ao fundo simboliza a possibilidade de construir um futuro juntos.",
+                "palavras_chave": ["União", "Parceria", "Amor", "Atração", "Relacionamento", "Harmonia"],
+                "palavras_chave_invertido": ["Desconexão", "Desequilíbrio", "Fim de relacionamento", "Desconfiança"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza união, parceria e amor mútuo. Indica um resultado harmonioso e conectado.",
+                "signo": "Câncer",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Chokmah em Briah (Vênus em Câncer)",
+                "cristais": ["Quartzo Rosa", "Esmeralda"],
+                "ervas": ["Manjericão", "Coriandro"],
+                "aromaterapia": ["Ylang Ylang"]
+            },
+            {
+                "nome": "Três de Copas",
+                "naipe": "Copas",
+                "numero": 3,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Cups03.jpg",
+                "descricao": "O Três de Copas é a carta da celebração, da amizade e da comunidade. Três mulheres dançam juntas, erguendo suas taças em um brinde de alegria. Esta carta representa festas, reuniões sociais, colaboração e a felicidade de estar cercado por pessoas queridas. É um momento de compartilhar a alegria e de celebrar as conquistas em conjunto.",
+                "interpretacao_imagem": "As três mulheres dançando em um círculo simbolizam a união e a alegria compartilhada. Suas taças erguidas são um brinde à amizade e à felicidade. A grinalda de flores e frutas ao redor delas representa a abundância e a colheita dos bons momentos. A atmosfera é de pura celebração e apoio mútuo.",
+                "palavras_chave": ["Celebração", "Amizade", "Comunidade", "Alegria", "Colaboração", "Festa"],
+                "palavras_chave_invertido": ["Isolamento", "Fofoca", "Excesso de festas", "Sentir-se excluído"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É a carta da celebração, amizade e comunidade. Indica um resultado feliz e compartilhado.",
+                "signo": "Câncer",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Binah em Briah (Mercúrio em Câncer)",
+                "cristais": ["Citrino", "Aventurina"],
+                "ervas": ["Menta", "Melissa"],
+                "aromaterapia": ["Laranja"]
+            },
+            {
+                "nome": "Quatro de Copas",
+                "naipe": "Copas",
+                "numero": 4,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/35/Cups04.jpg",
+                "descricao": "O Quatro de Copas representa a apatia, o descontentamento e as oportunidades perdidas. Um homem senta-se sob uma árvore, de braços cruzados, ignorando uma taça que lhe é oferecida por uma mão divina. Ele está tão focado em sua própria melancolia ou tédio que não consegue ver o presente que está bem na sua frente. Esta carta é um alerta para sair da introspecção excessiva e se abrir para novas possibilidades.",
+                "interpretacao_imagem": "O homem de braços cruzados simboliza o fechamento emocional e a recusa. As três taças à sua frente representam suas experiências passadas ou o que ele já tem. A quarta taça oferecida pela nuvem é a nova oportunidade que ele está ignorando. Ele está preso em seu próprio mundo, desconectado da realidade.",
+                "palavras_chave": ["Apatia", "Descontentamento", "Tédio", "Oportunidade perdida", "Introspecção"],
+                "palavras_chave_invertido": ["Superar a apatia", "Novas oportunidades", "Estar aberto", "Fim do tédio"],
+                "elemento": "Água",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa apatia, descontentamento e oportunidades perdidas. Há um bloqueio emocional ou falta de interesse que impede um resultado positivo.",
+                "signo": "Câncer",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Chesed em Briah (Lua em Câncer)",
+                "cristais": ["Quartzo Fumê", "Ametista"],
+                "ervas": ["Tomilho", "Sálvia"],
+                "aromaterapia": ["Bergamota"]
+            },
+            {
+                "nome": "Cinco de Copas",
+                "naipe": "Copas",
+                "numero": 5,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Cups05.jpg",
+                "descricao": "O Cinco de Copas é a carta da perda, do arrependimento e da tristeza. Uma figura de luto foca em três taças derramadas, ignorando as duas que ainda estão de pé atrás dela. Esta carta simboliza o luto por um desapontamento ou uma perda, e a dificuldade de ver o que ainda resta de bom na situação. É um convite para processar a dor, mas também para eventualmente virar-se e reconhecer que nem tudo está perdido.",
+                "interpretacao_imagem": "A figura encoberta de preto representa o luto e a tristeza. As três taças caídas são a perda, o foco da sua atenção. As duas taças intactas atrás dele são o que ainda resta, a esperança que ele não está vendo. A ponte sobre o rio ao fundo simboliza a passagem para um novo estado, se ele conseguir superar sua dor.",
+                "palavras_chave": ["Perda", "Arrependimento", "Tristeza", "Luto", "Desapontamento", "Foco no negativo"],
+                "palavras_chave_invertido": ["Aceitação", "Seguir em frente", "Perdão", "Ver o lado positivo"],
+                "elemento": "Água",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Indica perda, arrependimento e foco no negativo. A energia está voltada para o que foi perdido, não para o que pode ser ganho.",
+                "signo": "Escorpião",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Geburah em Briah (Marte em Escorpião)",
+                "cristais": ["Lágrima de Apache", "Rodonita"],
+                "ervas": ["Cipreste", "Mirra"],
+                "aromaterapia": ["Manjerona"]
+            },
+            {
+                "nome": "Seis de Copas",
+                "naipe": "Copas",
+                "numero": 6,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/1/17/Cups06.jpg",
+                "descricao": "O Seis de Copas é a carta da nostalgia, das memórias da infância e da inocência. Duas crianças em um jardim trocam uma taça cheia de flores, simbolizando a doçura e a simplicidade do passado. Esta carta pode representar a visita de pessoas do passado, a lembrança de bons momentos ou um desejo de retornar a um tempo mais simples e feliz. É sobre a alegria encontrada nas memórias e na pureza dos sentimentos.",
+                "interpretacao_imagem": "As crianças representam a inocência e o passado. A troca da taça de flores simboliza presentes simples e a generosidade do coração. O jardim seguro representa um lugar de felicidade e segurança. As taças ao redor podem simbolizar memórias e sentimentos passados. Um guarda caminha ao fundo, reforçando a sensação de segurança.",
+                "palavras_chave": ["Nostalgia", "Infância", "Memórias", "Inocência", "Felicidade", "Passado"],
+                "palavras_chave_invertido": ["Viver no passado", "Deixar o passado para trás", "Fim da inocência"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa a felicidade, a inocência e as alegrias simples. É um 'sim' gentil, muitas vezes conectado a sentimentos positivos do passado.",
+                "signo": "Escorpião",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Tiphareth em Briah (Sol em Escorpião)",
+                "cristais": ["Quartzo Rosa", "Jade"],
+                "ervas": ["Violeta", "Melissa"],
+                "aromaterapia": ["Neroli"]
+            },
+            {
+                "nome": "Sete de Copas",
+                "naipe": "Copas",
+                "numero": 7,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Cups07.jpg",
+                "descricao": "O Sete de Copas é a carta das escolhas, das ilusões e das fantasias. Uma figura vê sete taças flutuando em nuvens, cada uma contendo um presente diferente - alguns bons, outros ruins. Esta carta representa ter muitas opções e possibilidades, mas também o perigo de se perder em sonhos e não tomar uma atitude concreta. É um aviso para ter cuidado com o que se deseja e para distinguir a fantasia da realidade.",
+                "interpretacao_imagem": "A figura em silhueta representa o sonhador. As taças nas nuvens são as várias opções e tentações: riqueza, poder, sabedoria, mas também perigos como a serpente ou o dragão. A nuvem simboliza que essas opções são, por enquanto, apenas pensamentos ou sonhos, não realidades.",
+                "palavras_chave": ["Escolhas", "Ilusões", "Fantasias", "Sonhos", "Tentação", "Oportunidades"],
+                "palavras_chave_invertido": ["Clareza", "Foco", "Decisão", "Realidade", "Escolha acertada"],
+                "elemento": "Água",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Simboliza escolhas, ilusões e fantasias. Há muitas opções, mas falta clareza e ação concreta, tornando o resultado incerto.",
+                "signo": "Escorpião",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Netzach em Briah (Vênus em Escorpião)",
+                "cristais": ["Ametista", "Lepidolita"],
+                "ervas": ["Lótus", "Sândalo"],
+                "aromaterapia": ["Sálvia Esclaréia"]
+            },
+            {
+                "nome": "Oito de Copas",
+                "naipe": "Copas",
+                "numero": 8,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/6/60/Cups08.jpg",
+                "descricao": "O Oito de Copas representa o abandono e a busca por algo mais profundo. Uma figura se afasta de oito taças cuidadosamente arrumadas, partindo em uma jornada em busca de um propósito maior. Esta carta indica que, apesar de ter alcançado algum sucesso ou conforto emocional, algo ainda está faltando. É sobre deixar para trás o que é familiar, mas insatisfatório, para buscar uma verdade ou satisfação espiritual mais elevada.",
+                "interpretacao_imagem": "A figura se afasta das taças, simbolizando deixar para trás o sucesso material ou emocional em busca de algo mais. A lua (eclipsada ou crescente) ilumina seu caminho, representando uma jornada guiada pela intuição através do desconhecido. As montanhas representam os desafios da nova jornada.",
+                "palavras_chave": ["Abandono", "Busca", "Jornada espiritual", "Seguir em frente", "Insatisfação"],
+                "palavras_chave_invertido": ["Medo de mudar", "Ficar preso", "Retorno", "Felicidade encontrada"],
+                "elemento": "Água",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa abandonar uma situação insatisfatória. É um 'não' para o estado atual das coisas, pois a busca por algo melhor é necessária.",
+                "signo": "Peixes",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Hod em Briah (Saturno em Peixes)",
+                "cristais": ["Água-marinha", "Labradorita"],
+                "ervas": ["Mirra", "Salgueiro"],
+                "aromaterapia": ["Sândalo"]
+            },
+            {
+                "nome": "Nove de Copas",
+                "naipe": "Copas",
+                "numero": 9,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/2/24/Cups09.jpg",
+                "descricao": "O Nove de Copas é conhecida como a 'carta dos desejos'. Um homem satisfeito senta-se diante de nove taças arrumadas em um arco, representando a realização de desejos, o contentamento e a satisfação. Esta carta indica que seus sonhos estão se tornando realidade. É um momento de felicidade, abundância e de desfrutar dos prazeres da vida. Você tem tudo o que precisa para ser feliz.",
+                "interpretacao_imagem": "O homem sorridente e de braços cruzados exala autossatisfação e contentamento. As nove taças atrás dele são suas conquistas e bênçãos. A cortina azul representa a abundância emocional que ele alcançou. Ele está em uma posição de conforto e segurança.",
+                "palavras_chave": ["Realização de desejos", "Contentamento", "Satisfação", "Felicidade", "Abundância"],
+                "palavras_chave_invertido": ["Desejos não realizados", "Insatisfação", "Ganância", "Arrogância"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Conhecida como a 'carta dos desejos', indica satisfação, contentamento e a realização de seus sonhos. É um dos 'sim' mais fortes.",
+                "signo": "Peixes",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Yesod em Briah (Júpiter em Peixes)",
+                "cristais": ["Citrino", "Topázio"],
+                "ervas": ["Manjericão", "Trevo"],
+                "aromaterapia": ["Melissa"]
+            },
+            {
+                "nome": "Dez de Copas",
+                "naipe": "Copas",
+                "numero": 10,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/8/84/Cups10.jpg",
+                "descricao": "O Dez de Copas representa a felicidade suprema, a harmonia familiar e a realização emocional. Um casal feliz abraçado olha para um arco-íris de dez taças, enquanto seus filhos dançam alegremente. Esta carta simboliza o 'felizes para sempre', a paz no lar, relacionamentos duradouros e a alegria de viver em harmonia com seus entes queridos. É a culminação do amor e da felicidade.",
+                "interpretacao_imagem": "O arco-íris de taças é um símbolo de bênção divina e realização emocional. O casal representa o amor e a parceria. As crianças dançando simbolizam a alegria e a inocência. A casa e a paisagem verdejante representam estabilidade, lar e abundância. É a imagem perfeita da felicidade doméstica.",
+                "palavras_chave": ["Felicidade", "Harmonia", "Família", "Relacionamentos duradouros", "Realização"],
+                "palavras_chave_invertido": ["Família desfeita", "Conflito", "Felicidade bloqueada", "Valores desalinhados"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa a felicidade suprema, harmonia e realização emocional. É um 'sim' definitivo para questões de relacionamento e bem-estar.",
+                "signo": "Peixes",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Malkuth em Briah (Marte em Peixes)",
+                "cristais": ["Quartzo Rosa", "Selenita"],
+                "ervas": ["Rosa", "Melissa"],
+                "aromaterapia": ["Sândalo"]
+            },
+            {
+                "nome": "Pajem de Copas",
+                "naipe": "Copas",
+                "numero": 11,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Cups11.jpg",
+                "descricao": "O Pajem de Copas é um mensageiro de emoções e intuição. Ele representa a energia jovem da Água: sensibilidade, criatividade e uma mente aberta. Este Pajem está em contato com seu coração e seus sonhos. Ele pode indicar o início de um projeto criativo, uma mensagem de amor ou um convite para explorar sua intuição. Ele nos encoraja a ouvir nossa voz interior e a nos expressarmos com sinceridade.",
+                "interpretacao_imagem": "O jovem olha para a taça da qual um peixe emerge, simbolizando o inconsciente e a intuição se manifestando. Suas roupas floridas e a água ondulante atrás dele reforçam sua conexão com a criatividade e o mundo emocional. Ele é curioso e aberto a mensagens do coração.",
+                "palavras_chave": ["Intuição", "Criatividade", "Mensagens emocionais", "Sonhos", "Sensibilidade"],
+                "palavras_chave_invertido": ["Imaturidade emocional", "Bloqueio criativo", "Timidez", "Más notícias emocionais"],
+                "elemento": "Água",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Indica o surgimento de novas emoções ou ideias criativas. É uma carta de potencial, mas a realização depende da exploração desses sentimentos.",
+                "signo": "Câncer, Escorpião, Peixes",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte terrena da Água; a Princesa de Copas",
+                "cristais": ["Água-marinha", "Crisocola"],
+                "ervas": ["Jasmim", "Gardênia"],
+                "aromaterapia": ["Ylang Ylang"]
+            },
+            {
+                "nome": "Cavaleiro de Copas",
+                "naipe": "Copas",
+                "numero": 12,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Cups12.jpg",
+                "descricao": "O Cavaleiro de Copas é o romântico, o sonhador e o poeta. Ele avança lentamente, oferecendo sua taça como um gesto de amor e paz. Ele é guiado por seu coração e sua intuição. Esta carta pode representar a chegada de um convite, uma proposta romântica ou a busca por um ideal. Ele nos ensina a agir com compaixão e a seguir nossos sentimentos.",
+                "interpretacao_imagem": "O cavaleiro em seu cavalo branco (símbolo de pureza) se move com calma, não com a impetuosidade de outros cavaleiros. Ele oferece sua taça abertamente. Seu elmo e sapatos alados o conectam a Hermes/Mercúrio, o mensageiro, indicando que ele traz uma mensagem do coração. O rio representa o fluxo das emoções.",
+                "palavras_chave": ["Romance", "Charme", "Imaginação", "Oferta", "Convite", "Sonhador"],
+                "palavras_chave_invertido": ["Humor instável", "Ilusão", "Imaturidade", "Proposta falsa"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa ofertas românticas, convites e seguir o coração. A ação é guiada pela emoção positiva, levando a um 'sim'.",
+                "signo": "Peixes/Escorpião",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aérea da Água; o Príncipe de Copas",
+                "cristais": ["Pedra da Lua", "Quartzo Rosa"],
+                "ervas": ["Orquídea", "Lírio"],
+                "aromaterapia": ["Palmarosa"]
+            },
+            {
+                "nome": "Rainha de Copas",
+                "naipe": "Copas",
+                "numero": 13,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/6/62/Cups13.jpg",
+                "descricao": "A Rainha de Copas é a mestra do reino emocional. Ela é compassiva, intuitiva e carinhosa. Sentada em seu trono à beira-mar, ela está em profunda conexão com seu subconsciente e seus sentimentos. Ela representa o amor incondicional, a cura e o poder da intuição. Esta Rainha nos ensina a cuidar de nós mesmos e dos outros com empatia e sabedoria emocional.",
+                "interpretacao_imagem": "A Rainha segura uma taça elaborada, olhando para ela com intensidade, simbolizando sua profunda conexão com suas emoções e intuição. Seu trono é adornado com querubins de água (ninfas), e ela está sentada à beira do mar, o que reforça seu domínio sobre o elemento Água. Seus pés não tocam a água, indicando que ela não é dominada por suas emoções, mas as entende.",
+                "palavras_chave": ["Compaixão", "Intuição", "Cuidado", "Amor", "Sabedoria emocional", "Cura"],
+                "palavras_chave_invertido": ["Dependência emocional", "Sensibilidade excessiva", "Manipulação", "Martírio"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza compaixão, intuição e amor. Sua energia de cuidado e sabedoria emocional aponta para um resultado positivo.",
+                "signo": "Câncer/Peixes",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aquosa da Água; a Rainha de Copas",
+                "cristais": ["Pérola", "Selenita"],
+                "ervas": ["Lótus", "Musgo"],
+                "aromaterapia": ["Gerânio"]
+            },
+            {
+                "nome": "Rei de Copas",
+                "naipe": "Copas",
+                "numero": 14,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/0/04/Cups14.jpg",
+                "descricao": "O Rei de Copas representa o domínio das emoções com equilíbrio e maturidade. Ele é compassivo e sábio, mas também firme e controlado. Ele não é dominado por seus sentimentos, mas os usa como uma fonte de força e compreensão. Este Rei é um conselheiro, um diplomata e um líder que governa com o coração, mas sem perder a cabeça. Ele simboliza a inteligência emocional e a estabilidade.",
+                "interpretacao_imagem": "O Rei senta-se em um trono que flutua no mar tempestuoso, mostrando que ele permanece calmo e estável mesmo em meio ao caos emocional. Ele segura sua taça e seu cetro, símbolos de seu poder emocional e autoridade. Um peixe (símbolo do inconsciente) salta na água e um navio navega calmamente, indicando que ele tem controle sobre as águas turbulentas da vida.",
+                "palavras_chave": ["Maturidade emocional", "Compaixão", "Controle", "Sabedoria", "Diplomacia", "Estabilidade"],
+                "palavras_chave_invertido": ["Manipulação emocional", "Humor instável", "Frieza", "Chantagem emocional"],
+                "elemento": "Água",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Indica maturidade emocional, controle e diplomacia. Um 'sim' equilibrado, baseado em sabedoria e estabilidade emocional.",
+                "signo": "Escorpião/Câncer",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte ígnea da Água; o Rei de Copas",
+                "cristais": ["Água-marinha", "Lápis-lazúli"],
+                "ervas": ["Sândalo", "Musgo de carvalho"],
+                "aromaterapia": ["Olíbano"]
+            },
+            {
+                "nome": "Ás de Espadas",
+                "naipe": "Espadas",
+                "numero": 1,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Swords01.jpg",
+                "descricao": "O Ás de Espadas representa um novo começo no reino do pensamento, da verdade e da clareza mental. Uma mão divina segura uma espada coroada, simbolizando a vitória da razão e a conquista através do intelecto. Esta carta indica um momento de grande clareza, uma nova ideia brilhante ou uma decisão importante que corta a confusão. É a semente da verdade e da justiça.",
+                "interpretacao_imagem": "A mão saindo de uma nuvem representa uma inspiração divina ou uma nova verdade. A espada erguida simboliza o poder do intelecto. A coroa com um ramo de palmeira (vitória) e um de oliveira (paz) sugere que a verdade pode trazer tanto conquista quanto paz. As montanhas áridas ao fundo indicam que o caminho da verdade pode ser difícil.",
+                "palavras_chave": ["Clareza", "Verdade", "Justiça", "Nova ideia", "Conquista mental", "Decisão"],
+                "palavras_chave_invertido": ["Confusão", "Incerteza", "Decisão errada", "Falta de clareza"],
+                "elemento": "Ar",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa um momento de grande clareza, verdade e um avanço intelectual. É um 'sim' claro, que corta a confusão.",
+                "signo": "Gêmeos, Libra, Aquário",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Kether em Yetzirah",
+                "cristais": ["Quartzo Transparente", "Diamante"],
+                "ervas": ["Verbena", "Menta"],
+                "aromaterapia": ["Hortelã-pimenta"]
+            },
+            {
+                "nome": "Dois de Espadas",
+                "naipe": "Espadas",
+                "numero": 2,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Swords02.jpg",
+                "descricao": "O Dois de Espadas representa um impasse, uma decisão difícil e a recusa em ver a verdade. Uma mulher de olhos vendados segura duas espadas cruzadas, sentada em frente a um corpo de água. Ela está em uma trégua, bloqueando suas emoções e pensamentos para evitar tomar uma decisão. Esta carta sugere que você está evitando um conflito ou uma escolha, e que precisa remover a venda para enfrentar a realidade.",
+                "interpretacao_imagem": "A venda nos olhos simboliza a recusa em ver a situação com clareza. As duas espadas cruzadas representam o impasse e o equilíbrio precário. A lua crescente no céu indica que a intuição está presente, mas sendo ignorada. A água atrás dela representa as emoções que estão sendo suprimidas.",
+                "palavras_chave": ["Impasse", "Decisão difícil", "Negação", "Trégua", "Evitar conflito"],
+                "palavras_chave_invertido": ["Decisão tomada", "Verdade revelada", "Confusão", "Estar sobrecarregado"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Simboliza um impasse e a recusa em tomar uma decisão. A ação está bloqueada, resultando em um 'não' por agora.",
+                "signo": "Libra",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Chokmah em Yetzirah (Lua em Libra)",
+                "cristais": ["Selenita", "Pedra da Lua"],
+                "ervas": ["Sálvia", "Valeriana"],
+                "aromaterapia": ["Lavanda"]
+            },
+            {
+                "nome": "Três de Espadas",
+                "naipe": "Espadas",
+                "numero": 3,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/0/02/Swords03.jpg",
+                "descricao": "O Três de Espadas é a carta da dor, do coração partido e da verdade dolorosa. Três espadas perfuram um coração flutuando sob uma chuva torrencial. Esta carta representa uma tristeza profunda, uma separação, uma traição ou a aceitação de uma realidade dolorosa. Embora seja uma carta de sofrimento, a clareza que ela traz, representada pelas espadas, é o primeiro passo para a cura.",
+                "interpretacao_imagem": "O coração simboliza o amor e as emoções. As três espadas representam as palavras ou pensamentos dolorosos que o perfuram. A chuva torrencial representa a tristeza e o luto. É uma imagem direta de sofrimento emocional causado pela verdade ou por conflitos.",
+                "palavras_chave": ["Coração partido", "Dor", "Tristeza", "Separação", "Verdade dolorosa", "Luto"],
+                "palavras_chave_invertido": ["Cura", "Perdão", "Superar a dor", "Libertação"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Indica dor, coração partido e verdade dolorosa. A energia é de sofrimento e separação.",
+                "signo": "Libra",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Binah em Yetzirah (Saturno em Libra)",
+                "cristais": ["Quartzo Rosa", "Rodonita"],
+                "ervas": ["Rosa", "Cipreste"],
+                "aromaterapia": ["Camomila Romana"]
+            },
+            {
+                "nome": "Quatro de Espadas",
+                "naipe": "Espadas",
+                "numero": 4,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Swords04.jpg",
+                "descricao": "O Quatro de Espadas representa o descanso, a recuperação e a contemplação. A efígie de um cavaleiro repousa em um túmulo dentro de uma igreja, com três espadas na parede e uma sob ele. Esta carta não significa morte, mas sim uma pausa necessária para se recuperar de um período de estresse, conflito ou doença. É um momento de paz, meditação e de recarregar as energias antes de voltar à ação.",
+                "interpretacao_imagem": "O cavaleiro em repouso simboliza a pausa e a recuperação. As três espadas na parede representam os desafios passados. A espada sob ele simboliza a única questão que ainda precisa ser resolvida. O vitral na igreja indica um santuário e um período de contemplação espiritual.",
+                "palavras_chave": ["Descanso", "Recuperação", "Pausa", "Contemplação", "Meditação", "Paz"],
+                "palavras_chave_invertido": ["Esgotamento", "Estagnação", "Retorno à atividade", "Falta de descanso"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "É uma carta de pausa e recuperação. A ação está suspensa, então a resposta não é nem sim nem não, mas sim 'espere'.",
+                "signo": "Libra",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Chesed em Yetzirah (Júpiter em Libra)",
+                "cristais": ["Ametista", "Fluorita"],
+                "ervas": ["Lavanda", "Camomila"],
+                "aromaterapia": ["Lavanda"]
+            },
+            {
+                "nome": "Cinco de Espadas",
+                "naipe": "Espadas",
+                "numero": 5,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/2/23/Swords05.jpg",
+                "descricao": "O Cinco de Espadas é a carta da derrota, do conflito e da vitória a qualquer custo. Uma figura vitoriosa recolhe as espadas de seus oponentes derrotados, que se afastam com tristeza. Esta carta representa uma situação onde a vitória foi alcançada, mas de forma desonrosa ou com um custo muito alto, deixando um gosto amargo. Pode indicar bullying, traição ou a necessidade de escolher suas batalhas com sabedoria.",
+                "interpretacao_imagem": "A figura com um sorriso presunçoso representa uma vitória egoísta. As figuras derrotadas se afastando mostram a dor e a perda no conflito. O céu tempestuoso reflete a atmosfera de discórdia e hostilidade. Ele ganhou a batalha, mas perdeu o respeito.",
+                "palavras_chave": ["Conflito", "Derrota", "Desonra", "Vitória vazia", "Traição", "Bullying"],
+                "palavras_chave_invertido": ["Reconciliação", "Fim do conflito", "Perdão", "Vingança"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa conflito, derrota e uma vitória vazia. O resultado é negativo, mesmo que pareça haver um vencedor.",
+                "signo": "Aquário",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Geburah em Yetzirah (Vênus em Aquário)",
+                "cristais": ["Obsidiana", "Hematita"],
+                "ervas": ["Absinto", "Urtiga"],
+                "aromaterapia": ["Limão"]
+            },
+            {
+                "nome": "Seis de Espadas",
+                "naipe": "Espadas",
+                "numero": 6,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/2/29/Swords06.jpg",
+                "descricao": "O Seis de Espadas representa uma transição, uma jornada para um lugar melhor e a superação de dificuldades. Uma mulher e uma criança são levadas em um barco para uma nova margem, deixando para trás águas turbulentas. Esta carta simboliza uma passagem de um estado de tristeza ou conflito para um de paz e calma. Pode ser uma mudança literal ou uma jornada mental e emocional para longe dos problemas.",
+                "interpretacao_imagem": "A mulher e a criança de costas representam a tristeza e o passado que está sendo deixado para trás. As seis espadas fincadas no barco simbolizam as tristezas ou pensamentos que estão sendo levados, mas também a proteção durante a viagem. As águas turbulentas atrás e calmas à frente mostram a transição para um futuro melhor.",
+                "palavras_chave": ["Transição", "Jornada", "Mudança", "Superação", "Deixar para trás", "Paz"],
+                "palavras_chave_invertido": ["Viagem adiada", "Sentir-se preso", "Não conseguir seguir em frente", "Problemas"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Indica uma transição para longe dos problemas. É um 'sim' para a mudança, mas a jornada em si ainda está acontecendo, tornando o resultado final incerto.",
+                "signo": "Aquário",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Tiphareth em Yetzirah (Mercúrio em Aquário)",
+                "cristais": ["Água-marinha", "Crisocola"],
+                "ervas": ["Salgueiro", "Melissa"],
+                "aromaterapia": ["Gerânio"]
+            },
+            {
+                "nome": "Sete de Espadas",
+                "naipe": "Espadas",
+                "numero": 7,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/34/Swords07.jpg",
+                "descricao": "O Sete de Espadas é a carta da trapaça, do engano e da estratégia furtiva. Um homem foge de um acampamento levando cinco espadas, enquanto deixa duas para trás. Ele age sozinho e secretamente. Esta carta pode indicar desonestidade, roubo, traição ou a tentativa de 'se safar' de algo. Também pode representar a necessidade de usar a estratégia e a astúcia para lidar com uma situação, em vez da força direta.",
+                "interpretacao_imagem": "O homem olhando para trás enquanto foge mostra que ele teme ser pego. Levar cinco das sete espadas sugere que ele não conseguiu tudo o que queria, ou que sua vitória é parcial. Agir sozinho indica uma falta de confiança nos outros ou uma intenção egoísta. O acampamento ao fundo é o que ele está traindo ou de onde está escapando.",
+                "palavras_chave": ["Engano", "Trapaça", "Estratégia", "Furtividade", "Desonestidade", "Traição"],
+                "palavras_chave_invertido": ["Confissão", "Ser pego", "Honestidade", "Abrir o jogo"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Simboliza engano, trapaça e desonestidade. Um resultado baseado em tais fundamentos não pode ser positivo.",
+                "signo": "Aquário",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Netzach em Yetzirah (Lua em Aquário)",
+                "cristais": ["Obsidiana", "Quartzo Fumê"],
+                "ervas": ["Urtiga", "Dedaleira (simbólico)"],
+                "aromaterapia": ["Limão"]
+            },
+            {
+                "nome": "Oito de Espadas",
+                "naipe": "Espadas",
+                "numero": 8,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Swords08.jpg",
+                "descricao": "O Oito de Espadas representa a sensação de estar preso, restrito e impotente. Uma mulher está de olhos vendados e amarrada, cercada por oito espadas. No entanto, suas amarras estão frouxas e há um caminho claro para escapar. Esta carta simboliza as restrições autoimpostas, a crença de que não há saída e o poder do pensamento negativo. A libertação é possível se ela conseguir remover a venda e ver a situação com clareza.",
+                "interpretacao_imagem": "A mulher vendada e amarrada representa a sensação de aprisionamento. As espadas ao seu redor são os pensamentos limitantes e os medos que a cercam. O chão lamacento simboliza a confusão. As amarras frouxas e o espaço aberto mostram que a prisão é mais mental do que real. O castelo ao longe representa a segurança que ela poderia alcançar.",
+                "palavras_chave": ["Restrição", "Estar preso", "Limitações", "Crenças negativas", "Impotência"],
+                "palavras_chave_invertido": ["Libertação", "Encontrar uma saída", "Ver a verdade", "Poder pessoal"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa restrição e a sensação de estar preso por crenças limitantes. A libertação ainda não ocorreu.",
+                "signo": "Gêmeos",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Hod em Yetzirah (Júpiter em Gêmeos)",
+                "cristais": ["Ametista", "Lepidolita"],
+                "ervas": ["Valeriana", "Lavanda"],
+                "aromaterapia": ["Bergamota"]
+            },
+            {
+                "nome": "Nove de Espadas",
+                "naipe": "Espadas",
+                "numero": 9,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Swords09.jpg",
+                "descricao": "O Nove de Espadas é a 'carta do pesadelo'. Ela representa a ansiedade, o medo, a culpa e a angústia mental. Uma figura senta-se na cama, acordada no meio da noite, atormentada por seus pensamentos. As nove espadas na parede representam a fonte de seu sofrimento, que é principalmente mental. Esta carta indica noites sem dormir, preocupação excessiva e a necessidade de enfrentar os medos que nos assombram.",
+                "interpretacao_imagem": "A figura na cama com as mãos no rosto mostra desespero e angústia. As nove espadas na parede escura simbolizam os pensamentos negativos e a preocupação. As esculturas na cama, mostrando uma cena de violência, reforçam a ideia de conflito e sofrimento. É a escuridão da alma durante a noite.",
+                "palavras_chave": ["Ansiedade", "Medo", "Preocupação", "Culpa", "Angústia", "Pesadelos", "Sofrimento mental"],
+                "palavras_chave_invertido": ["Superar o medo", "Encontrar ajuda", "Libertação da ansiedade", "Paz de espírito"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "É a carta da ansiedade, medo e angústia mental. O sofrimento está bloqueando qualquer resultado positivo.",
+                "signo": "Gêmeos",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Yesod em Yetzirah (Marte em Gêmeos)",
+                "cristais": ["Quartzo Fumê", "Turmalina Negra"],
+                "ervas": ["Camomila", "Passiflora"],
+                "aromaterapia": ["Vetiver"]
+            },
+            {
+                "nome": "Dez de Espadas",
+                "naipe": "Espadas",
+                "numero": 10,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Swords10.jpg",
+                "descricao": "O Dez de Espadas representa um fim doloroso, traição, derrota e o fundo do poço. Um homem jaz no chão, apunhalado por dez espadas. É uma imagem de desastre total. No entanto, o sol nascendo no horizonte sugere que, após a escuridão total, há esperança de um novo começo. Esta carta indica o fim inevitável de uma situação, e embora seja extremamente doloroso, também é o fim do sofrimento e o início da recuperação.",
+                "interpretacao_imagem": "O homem com dez espadas nas costas é a imagem máxima da derrota e da traição. O céu escuro acima representa o desespero, mas a aurora dourada no horizonte simboliza a esperança e um novo dia. A água calma indica que, após a tempestade, a paz pode ser encontrada. É o fim de um ciclo de dor.",
+                "palavras_chave": ["Fim doloroso", "Derrota", "Traição", "Fundo do poço", "Colapso", "Fim do sofrimento"],
+                "palavras_chave_invertido": ["Recuperação", "Sobrevivência", "Resistir ao fim", "Pior já passou"],
+                "elemento": "Ar",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa o fundo do poço, a derrota e um fim doloroso. É o 'não' mais definitivo do baralho.",
+                "signo": "Gêmeos",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Malkuth em Yetzirah (Sol em Gêmeos)",
+                "cristais": ["Lágrima de Apache", "Obsidiana"],
+                "ervas": ["Teixo (simbólico)", "Cipreste"],
+                "aromaterapia": ["Cipreste"]
+            },
+            {
+                "nome": "Pajem de Espadas",
+                "naipe": "Espadas",
+                "numero": 11,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Swords11.jpg",
+                "descricao": "O Pajem de Espadas representa a energia jovem do Ar: curiosidade, verdade e uma mente afiada. Ele está sempre pronto para aprender, fazer perguntas e descobrir fatos. Este Pajem é um mensageiro de notícias, muitas vezes relacionadas a desafios ou à necessidade de clareza. Ele nos encoraja a ser vigilantes, a buscar a verdade e a usar nossa inteligência para navegar pelas situações. Sua energia pode ser um pouco inquieta e propensa a fofocas se não for bem direcionada.",
+                "interpretacao_imagem": "O jovem segura sua espada com as duas mãos, pronto para a ação, olhando ao redor com vigilância. O vento forte e as nuvens turbulentas refletem a natureza inquieta e desafiadora de seus pensamentos e das notícias que ele pode trazer. Os pássaros no céu representam a liberdade do pensamento.",
+                "palavras_chave": ["Curiosidade", "Verdade", "Clareza", "Comunicação", "Vigilância", "Mente afiada"],
+                "palavras_chave_invertido": ["Fofoca", "Más notícias", "Indiscrição", "Falta de planejamento"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Indica curiosidade e a busca pela verdade, mas também pode trazer notícias desafiadoras. A energia é inquieta e o resultado incerto.",
+                "signo": "Gêmeos, Libra, Aquário",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte terrena do Ar; a Princesa de Espadas",
+                "cristais": ["Sodalita", "Fluorita"],
+                "ervas": ["Menta", "Verbena"],
+                "aromaterapia": ["Manjericão"]
+            },
+            {
+                "nome": "Cavaleiro de Espadas",
+                "naipe": "Espadas",
+                "numero": 12,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Swords12.jpg",
+                "descricao": "O Cavaleiro de Espadas é a personificação da ação rápida, da ambição e da assertividade. Ele avança a toda velocidade, focado em seu objetivo, sem deixar que nada o desvie. Este cavaleiro é inteligente, determinado e direto. A carta indica um momento de agir com rapidez e decisão para alcançar seus objetivos. No entanto, sua pressa e falta de consideração pelos sentimentos alheios podem torná-lo insensível e imprudente.",
+                "interpretacao_imagem": "O cavaleiro em seu cavalo galopante, com a espada em riste, é a imagem da ação focada e implacável. O vento forte e as nuvens rasgadas pelo céu reforçam a ideia de velocidade e força. Ele está tão focado em seu objetivo que não vê mais nada.",
+                "palavras_chave": ["Ação rápida", "Ambição", "Assertividade", "Determinação", "Foco", "Inteligência"],
+                "palavras_chave_invertido": ["Imprudência", "Agressividade", "Falta de foco", "Ação precipitada"],
+                "elemento": "Ar",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa ação rápida e assertiva, mas também pode ser imprudente e precipitada. O sucesso depende de como essa energia impetuosa é canalizada.",
+                "signo": "Aquário/Gêmeos",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aérea do Ar; o Príncipe de Espadas",
+                "cristais": ["Cianita", "Olho de Falcão"],
+                "ervas": ["Erva-cidreira", "Gengibre"],
+                "aromaterapia": ["Eucalipto"]
+            },
+            {
+                "nome": "Rainha de Espadas",
+                "naipe": "Espadas",
+                "numero": 13,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Swords13.jpg",
+                "descricao": "A Rainha de Espadas é a mestra da verdade, da clareza e da independência. Ela é inteligente, perspicaz e não tem medo de cortar as ilusões para chegar ao cerne da questão. Sua experiência, muitas vezes marcada pela dor (como uma viúva), lhe deu uma sabedoria imparcial. Ela valoriza a honestidade e a lógica acima de tudo. Esta Rainha nos ensina a pensar com clareza, a estabelecer limites e a confiar em nosso próprio julgamento.",
+                "interpretacao_imagem": "Sentada em seu trono no alto das nuvens, a Rainha olha com severidade e clareza. Sua espada está erguida, pronta para a decisão. A mão estendida pode oferecer um conselho ou um julgamento. O querubim em seu trono representa seu intelecto. O pássaro solitário no céu simboliza sua independência e perspectiva elevada.",
+                "palavras_chave": ["Clareza", "Independência", "Inteligência", "Verdade", "Imparcialidade", "Limites"],
+                "palavras_chave_invertido": ["Frieza", "Amargura", "Julgamento severo", "Intolerância", "Fofoca"],
+                "elemento": "Ar",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza clareza, independência e a verdade. Sua capacidade de cortar a ilusão leva a um 'sim' baseado na lógica e na honestidade.",
+                "signo": "Libra/Aquário",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aquosa do Ar; a Rainha de Espadas",
+                "cristais": ["Quartzo Transparente", "Howlita"],
+                "ervas": ["Sálvia", "Cipreste"],
+                "aromaterapia": ["Hortelã-pimenta"]
+            },
+            {
+                "nome": "Rei de Espadas",
+                "naipe": "Espadas",
+                "numero": 14,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/33/Swords14.jpg",
+                "descricao": "O Rei de Espadas representa o domínio do intelecto, da autoridade e da verdade. Ele é um líder justo, ético e inteligente. Suas decisões são baseadas na lógica, na lei e em uma profunda compreensão da verdade. Este Rei é um estrategista, um juiz e um conselheiro. Ele nos ensina a usar nosso poder intelectual com responsabilidade, a comunicar com clareza e a governar com justiça e imparcialidade.",
+                "interpretacao_imagem": "O Rei senta-se em seu trono, olhando diretamente para a frente, com uma expressão de autoridade e certeza. Sua espada de dois gumes está erguida, mas em uma posição de repouso, indicando que ele só a usa quando necessário. As borboletas em seu trono simbolizam a transformação através do pensamento, e os querubins e a lua crescente reforçam seu poder sobre o reino mental.",
+                "palavras_chave": ["Autoridade", "Verdade", "Intelecto", "Justiça", "Lei", "Lógica", "Clareza"],
+                "palavras_chave_invertido": ["Tirania intelectual", "Abuso de poder", "Frieza", "Julgamento desonesto"],
+                "elemento": "Ar",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa autoridade intelectual, justiça e verdade. Indica um 'sim' baseado na lógica, na lei e na clareza mental.",
+                "signo": "Gêmeos/Libra",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte ígnea do Ar; o Rei de Espadas",
+                "cristais": ["Lápis-lazúli", "Safira"],
+                "ervas": ["Alecrim", "Tomilho"],
+                "aromaterapia": ["Lavanda"]
+            },
+            {
+                "nome": "Ás de Ouros",
+                "naipe": "Ouros",
+                "numero": 1,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Pents01.jpg",
+                "descricao": "O Ás de Ouros representa um novo começo no mundo material, uma oportunidade de prosperidade e manifestação. Uma mão divina oferece uma moeda de ouro, simbolizando a semente de um novo empreendimento, um novo emprego ou uma nova fonte de renda. Esta carta indica o potencial para o sucesso material, a segurança e a abundância, convidando-nos a transformar nossas ideias em resultados concretos.",
+                "interpretacao_imagem": "A mão saindo da nuvem oferece o pentáculo como um presente de oportunidade. O jardim florido abaixo, com um portão que leva a montanhas, simboliza que esta oportunidade material pode levar a um caminho de crescimento e sucesso. Os lírios brancos representam a pureza de intenção no mundo material.",
+                "palavras_chave": ["Oportunidade", "Prosperidade", "Novo começo material", "Manifestação", "Abundância"],
+                "palavras_chave_invertido": ["Oportunidade perdida", "Mau investimento", "Falta de planejamento", "Ganância"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza uma nova oportunidade de prosperidade e manifestação no mundo real. É uma clara indicação para prosseguir.",
+                "signo": "Touro, Virgem, Capricórnio",
+                "planeta": "Terra",
+                "referencias_cabalisticas": "Kether em Assiah",
+                "cristais": ["Pirita", "Citrino"],
+                "ervas": ["Manjericão", "Patchouli"],
+                "aromaterapia": ["Patchouli"]
+            },
+            {
+                "nome": "Dois de Ouros",
+                "naipe": "Ouros",
+                "numero": 2,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Pents02.jpg",
+                "descricao": "O Dois de Ouros representa o equilíbrio e o gerenciamento de múltiplas prioridades. Um jovem dança enquanto equilibra dois pentáculos conectados por um laço do infinito. Ele está lidando com as flutuações da vida com flexibilidade e adaptabilidade. Esta carta sugere a necessidade de gerenciar seu tempo, dinheiro ou energia entre diferentes áreas da vida. É sobre ser multitarefa e se adaptar às mudanças.",
+                "interpretacao_imagem": "O jovem equilibra os dois pentáculos, simbolizando o gerenciamento de finanças, trabalho e vida pessoal. O laço do infinito mostra que ele está fazendo isso de forma contínua e adaptável. Os navios subindo e descendo nas ondas ao fundo representam os altos e baixos da vida, com os quais ele está lidando com sucesso.",
+                "palavras_chave": ["Equilíbrio", "Adaptabilidade", "Gerenciamento", "Multitarefa", "Flexibilidade"],
+                "palavras_chave_invertido": ["Desequilíbrio", "Má gestão", "Estar sobrecarregado", "Dificuldade em decidir"],
+                "elemento": "Terra",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa equilíbrio e gerenciamento de múltiplas prioridades. A situação está em fluxo e requer adaptabilidade, tornando o resultado incerto.",
+                "signo": "Capricórnio",
+                "planeta": "Júpiter",
+                "referencias_cabalisticas": "Chokmah em Assiah (Júpiter em Capricórnio)",
+                "cristais": ["Jaspe", "Turmalina"],
+                "ervas": ["Feno-grego", "Trigo"],
+                "aromaterapia": ["Gengibre"]
+            },
+            {
+                "nome": "Três de Ouros",
+                "naipe": "Ouros",
+                "numero": 3,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/4/42/Pents03.jpg",
+                "descricao": "O Três de Ouros é a carta do trabalho em equipe, da colaboração e da maestria. Um jovem artesão trabalha em uma catedral, mostrando seus planos para um monge e um nobre. Esta carta representa o reconhecimento pelo seu trabalho árduo e suas habilidades. É sobre colaboração, aprendizado e a aplicação de seus talentos em um projeto significativo. O sucesso vem através do trabalho em equipe e da dedicação à qualidade.",
+                "interpretacao_imagem": "O artesão em um banco mais elevado mostra sua habilidade e importância no projeto. O monge e o nobre representam os diferentes stakeholders (espiritual e material) que reconhecem e aprovam seu trabalho. A construção da catedral simboliza um trabalho significativo e duradouro. Os três pentáculos formam um padrão de equilíbrio e colaboração.",
+                "palavras_chave": ["Trabalho em equipe", "Colaboração", "Maestria", "Habilidade", "Reconhecimento"],
+                "palavras_chave_invertido": ["Falta de trabalho em equipe", "Trabalho medíocre", "Conflito no trabalho", "Falta de reconhecimento"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Indica trabalho em equipe, maestria e reconhecimento. O progresso é sólido e colaborativo, levando a um resultado positivo.",
+                "signo": "Capricórnio",
+                "planeta": "Marte",
+                "referencias_cabalisticas": "Binah em Assiah (Marte em Capricórnio)",
+                "cristais": ["Pirita", "Olho de Tigre"],
+                "ervas": ["Alecrim", "Sálvia"],
+                "aromaterapia": ["Alecrim"]
+            },
+            {
+                "nome": "Quatro de Ouros",
+                "naipe": "Ouros",
+                "numero": 4,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/3/35/Pents04.jpg",
+                "descricao": "O Quatro de Ouros representa a segurança, a estabilidade, mas também o apego excessivo e o medo da perda. Um homem se agarra firmemente a suas quatro moedas, com medo de perdê-las. Ele alcançou estabilidade material, mas agora tem medo de arriscar ou compartilhar. Esta carta pode indicar uma boa gestão financeira e a construção de um patrimônio, mas também alerta contra a avareza e a resistência à mudança por medo de perder o que tem.",
+                "interpretacao_imagem": "O homem segura um pentáculo na cabeça (pensamentos), um no peito (emoções) e dois sob os pés (base), mostrando que todo o seu ser está focado em manter suas posses. Sua postura é rígida e defensiva. A cidade atrás dele representa a sociedade da qual ele pode estar se isolando para proteger sua riqueza.",
+                "palavras_chave": ["Segurança", "Estabilidade", "Controle", "Apego", "Avareza", "Medo da perda"],
+                "palavras_chave_invertido": ["Generosidade", "Libertação", "Insegurança financeira", "Gastos imprudentes"],
+                "elemento": "Terra",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Representa estagnação, apego e medo da perda. A resistência à mudança impede o progresso e um resultado favorável.",
+                "signo": "Capricórnio",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Chesed em Assiah (Sol em Capricórnio)",
+                "cristais": ["Hematita", "Quartzo Fumê"],
+                "ervas": ["Patchouli", "Cipreste"],
+                "aromaterapia": ["Cedro"]
+            },
+            {
+                "nome": "Cinco de Ouros",
+                "naipe": "Ouros",
+                "numero": 5,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/9/96/Pents05.jpg",
+                "descricao": "O Cinco de Ouros é a carta da dificuldade financeira, da pobreza e do isolamento. Duas figuras pobres e feridas caminham na neve, do lado de fora de uma igreja iluminada. Eles se sentem excluídos e sem ajuda. Esta carta representa tempos difíceis, perda de emprego, problemas de saúde ou a sensação de ter sido deixado de fora. No entanto, a igreja iluminada sugere que a ajuda está próxima, se eles conseguirem vê-la e pedi-la.",
+                "interpretacao_imagem": "As duas figuras descalças na neve representam a pobreza e a vulnerabilidade. Sua condição física (um com muletas, outro com a cabeça coberta) indica sofrimento. A igreja com o vitral iluminado simboliza o santuário e a ajuda espiritual ou comunitária que eles estão ignorando em seu desespero.",
+                "palavras_chave": ["Dificuldade financeira", "Pobreza", "Isolamento", "Perda", "Sentir-se excluído"],
+                "palavras_chave_invertido": ["Recuperação", "Encontrar ajuda", "Fim das dificuldades", "Nova esperança"],
+                "elemento": "Terra",
+                "resposta_rapida": "Não",
+                "justificativa_resposta": "Simboliza dificuldade financeira, perda e isolamento. É um claro sinal de tempos difíceis.",
+                "signo": "Touro",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Geburah em Assiah (Mercúrio em Touro)",
+                "cristais": ["Turmalina Negra", "Malaquita"],
+                "ervas": ["Confrei", "Urtiga"],
+                "aromaterapia": ["Bergamota"]
+            },
+            {
+                "nome": "Seis de Ouros",
+                "naipe": "Ouros",
+                "numero": 6,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Pents06.jpg",
+                "descricao": "O Seis de Ouros representa a generosidade, a caridade e o equilíbrio entre dar e receber. Um homem rico distribui moedas para dois mendigos. Ele usa uma balança, mostrando que sua doação é justa e equilibrada. Esta carta pode indicar o recebimento de ajuda financeira, um presente, ou a oportunidade de ser generoso com os outros. É sobre o fluxo de recursos e a importância da equidade.",
+                "interpretacao_imagem": "O homem rico em pé representa o poder e a abundância. Os mendigos ajoelhados representam a necessidade. A balança na mão do homem rico simboliza a justiça e o equilíbrio em sua generosidade. Ele não está apenas doando, mas distribuindo de forma justa. É a imagem da caridade equilibrada.",
+                "palavras_chave": ["Generosidade", "Caridade", "Dar e receber", "Equilíbrio financeiro", "Ajuda"],
+                "palavras_chave_invertido": ["Dívida", "Egoísmo", "Abuso de generosidade", "Desequilíbrio"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa generosidade e o equilíbrio entre dar e receber. Indica um fluxo positivo de recursos, seja dando ou recebendo ajuda.",
+                "signo": "Touro",
+                "planeta": "Lua",
+                "referencias_cabalisticas": "Tiphareth em Assiah (Lua em Touro)",
+                "cristais": ["Jade", "Aventurina"],
+                "ervas": ["Manjericão", "Menta"],
+                "aromaterapia": ["Manjericão"]
+            },
+            {
+                "nome": "Sete de Ouros",
+                "naipe": "Ouros",
+                "numero": 7,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Pents07.jpg",
+                "descricao": "O Sete de Ouros representa a paciência, a avaliação e a espera pelos frutos do trabalho. Um homem apoia-se em sua ferramenta, contemplando os sete pentáculos que crescem em um arbusto. Ele trabalhou duro e agora está fazendo uma pausa para avaliar seu progresso e decidir os próximos passos. Esta carta indica que o sucesso de longo prazo requer paciência e que é importante refletir sobre seus investimentos (de tempo, energia ou dinheiro) antes de continuar.",
+                "interpretacao_imagem": "O homem contemplando sua colheita representa a avaliação do progresso. Ele não está colhendo ainda, apenas observando. Isso simboliza um momento de pausa e reflexão. Os sete pentáculos na planta são os resultados de seu trabalho árduo.",
+                "palavras_chave": ["Paciência", "Avaliação", "Investimento", "Colheita", "Pausa", "Reflexão"],
+                "palavras_chave_invertido": ["Impaciência", "Maus investimentos", "Falta de resultados", "Procrastinação"],
+                "elemento": "Terra",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Indica um momento de paciência e avaliação dos investimentos. A colheita ainda não chegou, então a resposta é 'espere'.",
+                "signo": "Touro",
+                "planeta": "Saturno",
+                "referencias_cabalisticas": "Netzach em Assiah (Saturno em Touro)",
+                "cristais": ["Ágata de Musgo", "Pirita"],
+                "ervas": ["Trigo", "Patchouli"],
+                "aromaterapia": ["Sálvia"]
+            },
+            {
+                "nome": "Oito de Ouros",
+                "naipe": "Ouros",
+                "numero": 8,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/4/49/Pents08.jpg",
+                "descricao": "O Oito de Ouros é a carta da dedicação, do aprendizado e da maestria. Um artesão está diligentemente trabalhando, gravando um pentáculo, enquanto outros já estão concluídos e expostos. Esta carta representa o aprimoramento de habilidades, o trabalho focado e a busca pela excelência. É sobre se dedicar a um ofício, estudar ou treinar para se tornar um mestre em sua área. O sucesso vem através da prática e da atenção aos detalhes.",
+                "interpretacao_imagem": "O artesão concentrado em seu trabalho simboliza a dedicação e o foco. Cada pentáculo que ele cria é uma obra de sua habilidade. Os pentáculos expostos mostram seu progresso e maestria. A cidade ao longe sugere que seu trabalho pode eventualmente trazê-lo para o mundo, mas por enquanto ele está focado em seu ofício.",
+                "palavras_chave": ["Dedicação", "Habilidade", "Maestria", "Aprendizado", "Trabalho focado", "Qualidade"],
+                "palavras_chave_invertido": ["Trabalho repetitivo", "Falta de ambição", "Perfeccionismo", "Qualidade ruim"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza dedicação, trabalho árduo e aprimoramento de habilidades. O esforço focado está levando a um resultado positivo e de qualidade.",
+                "signo": "Virgem",
+                "planeta": "Sol",
+                "referencias_cabalisticas": "Hod em Assiah (Sol em Virgem)",
+                "cristais": ["Olho de Tigre", "Citrino"],
+                "ervas": ["Alecrim", "Dill"],
+                "aromaterapia": ["Vetiver"]
+            },
+            {
+                "nome": "Nove de Ouros",
+                "naipe": "Ouros",
+                "numero": 9,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Pents09.jpg",
+                "descricao": "O Nove de Ouros representa a independência, a autossuficiência e o luxo conquistado. Uma mulher elegante está em seu jardim exuberante, com um falcão em sua mão, cercada por nove pentáculos. Ela alcançou a abundância e a segurança através de seus próprios esforços e agora desfruta dos frutos de seu trabalho. Esta carta simboliza o sucesso financeiro, a disciplina e o prazer de desfrutar de uma vida confortável e refinada.",
+                "interpretacao_imagem": "A mulher em seu jardim privado simboliza a independência e o desfrute solitário de suas conquistas. O falcão encapuzado em sua mão representa seu autocontrole e disciplina. As videiras cheias de uvas e os nove pentáculos representam a abundância e a riqueza. O caracol no chão simboliza a paciência e a persistência que a levaram ao sucesso.",
+                "palavras_chave": ["Independência", "Abundância", "Autossuficiência", "Luxo", "Sucesso", "Disciplina"],
+                "palavras_chave_invertido": ["Dependência", "Insegurança financeira", "Trabalho excessivo", "Solidão"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa abundância, independência e luxo conquistado por mérito próprio. É um forte 'sim' para questões de sucesso material.",
+                "signo": "Virgem",
+                "planeta": "Vênus",
+                "referencias_cabalisticas": "Yesod em Assiah (Vênus em Virgem)",
+                "cristais": ["Peridoto", "Aventurina"],
+                "ervas": ["Lavanda", "Trigo"],
+                "aromaterapia": ["Gerânio"]
+            },
+            {
+                "nome": "Dez de Ouros",
+                "naipe": "Ouros",
+                "numero": 10,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/4/42/Pents10.jpg",
+                "descricao": "O Dez de Ouros representa a riqueza, o legado e a estabilidade familiar. Um patriarca observa sua família - um casal e uma criança - desfrutando da segurança e da abundância que ele construiu. Esta carta simboliza a riqueza geracional, a herança, a tradição e a criação de um legado duradouro. É a culminação do sucesso material, que traz segurança e felicidade para toda a família.",
+                "interpretacao_imagem": "O homem idoso representa o patriarca e a sabedoria. O casal e a criança representam as gerações futuras que se beneficiam de seu trabalho. Os cães simbolizam lealdade e conforto doméstico. O arco com o brasão da família representa a tradição e o legado. Os dez pentáculos estão dispostos na forma da Árvore da Vida Cabalística, simbolizando a manifestação completa e a conexão entre gerações.",
+                "palavras_chave": ["Legado", "Riqueza", "Herança", "Família", "Estabilidade", "Tradição", "Abundância"],
+                "palavras_chave_invertido": ["Disputa familiar", "Perda financeira", "Fardo da herança", "Instabilidade"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Simboliza riqueza, legado e estabilidade familiar. É a culminação do sucesso material e um 'sim' definitivo.",
+                "signo": "Virgem",
+                "planeta": "Mercúrio",
+                "referencias_cabalisticas": "Malkuth em Assiah (Mercúrio em Virgem)",
+                "cristais": ["Diamante", "Pirita"],
+                "ervas": ["Musgo de Carvalho", "Patchouli"],
+                "aromaterapia": ["Cipreste"]
+            },
+            {
+                "nome": "Pajem de Ouros",
+                "naipe": "Ouros",
+                "numero": 11,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Pents11.jpg",
+                "descricao": "O Pajem de Ouros representa a energia jovem da Terra: a vontade de aprender, a manifestação de novas oportunidades e o foco nos estudos. Ele segura um pentáculo com admiração, pronto para explorar o mundo material. Este Pajem é um estudante diligente, trazendo notícias de novas oportunidades de trabalho, estudo ou investimento. Ele nos encoraja a ser práticos, a aprender novas habilidades e a transformar nossos sonhos em realidade.",
+                "interpretacao_imagem": "O jovem olha para o pentáculo que segura como um objeto de estudo e fascínio. Ele está em um campo fértil, simbolizando o potencial de crescimento. As montanhas ao fundo representam as metas que ele pode alcançar com dedicação. Ele está com os pés firmes no chão, pronto para aprender de forma prática.",
+                "palavras_chave": ["Aprendizado", "Novas oportunidades", "Estudo", "Manifestação", "Diligência"],
+                "palavras_chave_invertido": ["Procrastinação", "Falta de foco", "Oportunidades perdidas", "Preguiça"],
+                "elemento": "Terra",
+                "resposta_rapida": "Talvez",
+                "justificativa_resposta": "Representa uma nova oportunidade de estudo ou trabalho. É a semente, e o resultado depende da dedicação e do esforço empregados.",
+                "signo": "Touro, Virgem, Capricórnio",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte terrena da Terra; a Princesa de Ouros",
+                "cristais": ["Ágata de Musgo", "Jaspe"],
+                "ervas": ["Trigo", "Feno-grego"],
+                "aromaterapia": ["Menta"]
+            },
+            {
+                "nome": "Cavaleiro de Ouros",
+                "naipe": "Ouros",
+                "numero": 12,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Pents12.jpg",
+                "descricao": "O Cavaleiro de Ouros é o mais lento e metódico de todos os cavaleiros. Ele representa o trabalho árduo, a responsabilidade e a persistência. Ele não se apressa, mas avança de forma constante e confiável em direção a seus objetivos. Esta carta indica a necessidade de uma abordagem prática e paciente. Ele é leal, dedicado e cumpre suas promessas, embora possa ser um pouco teimoso ou resistente à mudança.",
+                "interpretacao_imagem": "O cavaleiro está em um cavalo forte e escuro, que está parado, não em movimento. Ele segura seu pentáculo com cuidado, contemplando seus próximos passos. A paisagem arada ao fundo mostra que ele é um trabalhador e que entende os ciclos da natureza e do trabalho. Ele é a personificação da diligência.",
+                "palavras_chave": ["Trabalho árduo", "Responsabilidade", "Persistência", "Confiabilidade", "Paciência"],
+                "palavras_chave_invertido": ["Preguiça", "Estagnação", "Teimosia", "Irresponsabilidade"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Indica trabalho árduo, responsabilidade e persistência. É um 'sim' lento, mas constante e confiável.",
+                "signo": "Virgem/Touro",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aérea da Terra; o Príncipe de Ouros",
+                "cristais": ["Turmalina Negra", "Pirita"],
+                "ervas": ["Confrei", "Vetiver"],
+                "aromaterapia": ["Vetiver"]
+            },
+            {
+                "nome": "Rainha de Ouros",
+                "naipe": "Ouros",
+                "numero": 13,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/8/88/Pents13.jpg",
+                "descricao": "A Rainha de Ouros é a personificação da mãe provedora, da mulher de negócios e da anfitriã generosa. Ela é prática, carinhosa e cria um ambiente de conforto e segurança. Sentada em seu jardim abundante, ela segura seu pentáculo, simbolizando seu domínio sobre o mundo material. Ela sabe como equilibrar o trabalho e a família, e encontra alegria em nutrir os outros e em desfrutar da abundância que criou.",
+                "interpretacao_imagem": "A Rainha em seu trono de pedra, adornado com frutas e animais, está cercada pela natureza, representando sua conexão com a Terra e a abundância. Ela segura seu pentáculo com carinho, como se fosse seu filho. O coelho próximo a ela simboliza a fertilidade e a prosperidade. Ela é a imagem do conforto e da segurança material.",
+                "palavras_chave": ["Provedora", "Conforto", "Segurança", "Generosidade", "Praticidade", "Abundância"],
+                "palavras_chave_invertido": ["Dependência material", "Negligência", "Desorganização", "Ciúme material"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "Representa conforto, segurança e abundância. Sua energia prática e carinhosa leva a um resultado próspero e seguro.",
+                "signo": "Capricórnio/Virgem",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte aquosa da Terra; a Rainha de Ouros",
+                "cristais": ["Jade", "Esmeralda"],
+                "ervas": ["Magnólia", "Trigo"],
+                "aromaterapia": ["Rosa"]
+            },
+            {
+                "nome": "Rei de Ouros",
+                "naipe": "Ouros",
+                "numero": 14,
+                "imagem": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Pents14.jpg",
+                "descricao": "O Rei de Ouros é o mestre do mundo material. Ele representa o sucesso, a riqueza e a segurança alcançados através de trabalho árduo, disciplina e sabedoria. Ele não é apenas rico, mas também generoso e confiável, um líder que provê para seu reino e sua família. Ele transformou sua visão em um império duradouro. Esta carta simboliza o auge do sucesso material e a capacidade de desfrutar da vida com segurança e confiança.",
+                "interpretacao_imagem": "O Rei senta-se em um trono adornado com cabeças de touro e videiras, símbolos de Touro e da abundância. Seu castelo está ao fundo, representando seu império. Ele segura seu cetro e seu pentáculo com uma autoridade relaxada, mostrando que ele está confortável com seu poder e riqueza. Ele é o rei Midas, que transforma tudo o que toca em ouro.",
+                "palavras_chave": ["Riqueza", "Sucesso", "Segurança", "Liderança", "Abundância", "Confiabilidade"],
+                "palavras_chave_invertido": ["Ganância", "Corrupção", "Incompetência", "Instabilidade financeira"],
+                "elemento": "Terra",
+                "resposta_rapida": "Sim",
+                "justificativa_resposta": "É o mestre do sucesso material. Representa riqueza, segurança e liderança, indicando o auge do sucesso e um 'sim' inequívoco.",
+                "signo": "Touro/Capricórnio",
+                "planeta": "",
+                "referencias_cabalisticas": "A parte ígnea da Terra; o Rei de Ouros",
+                "cristais": ["Pirita", "Diamante"],
+                "ervas": ["Musgo de Carvalho", "Cedro"],
+                "aromaterapia": ["Patchouli"]
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const gallery = document.getElementById('card-gallery');
+            const searchBox = document.getElementById('search-box');
+            const suitFilter = document.getElementById('filter-suit');
+            const elementFilter = document.getElementById('filter-element');
+            const resetBtn = document.getElementById('reset-filters');
+            const noResults = document.getElementById('no-results');
+            const modal = document.getElementById('card-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const drawCardBtn = document.getElementById('draw-card-btn');
+            const drawThreeCardsBtn = document.getElementById('draw-three-cards-btn');
+            const cardDrawArea = document.getElementById('card-draw-area');
+
+            function createCardElement(card) {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card-item text-center cursor-pointer group';
+                cardDiv.innerHTML = `
+            <img src="${card.imagem}" alt="${card.nome}" class="w-full rounded-lg shadow-md mb-2 mx-auto" onerror="this.onerror=null;this.src='https://placehold.co/200x344/f5eeda/8c3b3b?text=${card.nome.replace(/\s/g, '+')}';">
+            <h4 class="card-item-name text-lg font-semibold">${card.nome}</h4>
+        `;
+                cardDiv.addEventListener('click', () => showCardDetails(card));
+                return cardDiv;
+            }
+
+            function displayCards(cards) {
+                gallery.innerHTML = '';
+                if (cards.length === 0) {
+                    noResults.classList.remove('hidden');
+                } else {
+                    noResults.classList.add('hidden');
+                    cards.forEach(card => {
+                        gallery.appendChild(createCardElement(card));
+                    });
+                }
+            }
+
+            function filterCards() {
+                const searchTerm = searchBox.value.toLowerCase();
+                const selectedSuit = suitFilter.value;
+                const selectedElement = elementFilter.value;
+
+                const filtered = tarotDeck.filter(card => {
+                    const nameMatch = card.nome.toLowerCase().includes(searchTerm);
+                    const suitMatch = selectedSuit ? card.naipe === selectedSuit : true;
+                    const elementMatch = selectedElement ? card.elemento === selectedElement : true;
+
+                    const keywordsMatch = card.palavras_chave.some(kw => kw.toLowerCase().includes(searchTerm));
+                    const crystalsMatch = card.cristais.some(c => c.toLowerCase().includes(searchTerm));
+                    const herbsMatch = card.ervas.some(h => h.toLowerCase().includes(searchTerm));
+                    const planetMatch = card.planeta && card.planeta.toLowerCase().includes(searchTerm);
+                    const signMatch = card.signo && card.signo.toLowerCase().includes(searchTerm);
+
+                    const propertyMatch = keywordsMatch || crystalsMatch || herbsMatch || planetMatch || signMatch;
+
+                    return (nameMatch || (searchTerm.length > 2 && propertyMatch)) && suitMatch && elementMatch;
+                });
+
+                displayCards(filtered);
+            }
+
+            function getAstrologicalSymbol(name) {
+                const symbols = {
+                    'Áries': '♈', 'Touro': '♉', 'Gêmeos': '♊', 'Câncer': '♋',
+                    'Leão': '♌', 'Virgem': '♍', 'Libra': '♎', 'Escorpião': '♏',
+                    'Sagitário': '♐', 'Capricórnio': '♑', 'Aquário': '♒', 'Peixes': '♓',
+                    'Sol': '☉', 'Lua': '☽', 'Mercúrio': '☿', 'Vênus': '♀', 'Marte': '♂',
+                    'Júpiter': '♃', 'Saturno': '♄', 'Urano': '♅', 'Netuno': '♆', 'Plutão': '♇',
+                    'Fogo': '🜂', 'Terra': '🜃', 'Ar': '🜁', 'Água': '🜄'
+                };
+                const found = Object.keys(symbols).find(key => name.includes(key));
+                return found ? `<span class="symbol" title="${found}">${symbols[found]}</span>` : '';
+            }
+
+            function showCardDetails(card) {
+                const modalContent = document.getElementById('modal-content');
+                const modalName = document.getElementById('modal-card-name');
+                const modalImage = document.getElementById('modal-card-image');
+                const modalDetails = document.getElementById('modal-card-details');
+
+                modalName.textContent = `${card.nome} ${card.naipe === 'Arcanos Maiores' ? `(${card.numero})` : ''}`;
+                modalImage.src = card.imagem;
+                modalImage.alt = card.nome;
+
+                const keywordsDirect = card.palavras_chave.map(kw => `<span class="inline-block bg-black bg-opacity-20 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">${kw}</span>`).join('');
+                const keywordsInverted = card.palavras_chave_invertido.map(kw => `<span class="inline-block bg-black bg-opacity-20 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">${kw}</span>`).join('');
+                const crystals = card.cristais.map(c => `<span class="inline-block bg-black bg-opacity-20 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">💎 ${c}</span>`).join('');
+                const herbs = card.ervas.map(h => `<span class="inline-block bg-black bg-opacity-20 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">🌿 ${h}</span>`).join('');
+                const aromatherapy = card.aromaterapia.map(a => `<span class="inline-block bg-black bg-opacity-20 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">💧 ${a}</span>`).join('');
+
+                modalDetails.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Descrição</h4>
+                    <p>${card.descricao}</p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Interpretação da Imagem</h4>
+                    <p>${card.interpretacao_imagem}</p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Correspondências</h4>
+                     <p><strong>Elemento:</strong> ${card.elemento} ${getAstrologicalSymbol(card.elemento)}</p>
+                    ${card.naipe === 'Arcanos Maiores' ? `<p><strong>Planeta/Signo:</strong> ${card.signo} ${getAstrologicalSymbol(card.signo)}</p>` : ''}
+                    <p><strong>Naipe:</strong> ${card.naipe}</p>
+                    <p><strong>Referências Cabalísticas:</strong> ${card.referencias_cabalisticas}</p>
+                    <p class="mt-2"><strong>Resposta Rápida:</strong> <span class="font-bold">${card.resposta_rapida}.</span> ${card.justificativa_resposta || ''}</p>
+                </div>
+                 <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Palavras-chave (Direita)</h4>
+                    <div class="flex flex-wrap">${keywordsDirect}</div>
+                </div>
+                 <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Palavras-chave (Invertida)</h4>
+                    <div class="flex flex-wrap">${keywordsInverted}</div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Cristais e Ervas</h4>
+                    <div class="flex flex-wrap">${crystals} ${herbs}</div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-2 border-b-2 border-current border-opacity-50 pb-1">Aromaterapia</h4>
+                    <div class="flex flex-wrap">${aromatherapy}</div>
+                </div>
+            </div>
+        `;
+
+                modalContent.className = 'vintage-border w-full max-w-5xl relative';
+                if (card.elemento) {
+                    modalContent.classList.add(`modal-bg-${card.elemento.toLowerCase()}`);
+                }
+
+                modal.classList.remove('hidden');
+            }
+
+            function drawRandomCard() {
+                drawCardBtn.disabled = true;
+                drawThreeCardsBtn.disabled = true;
+                drawCardBtn.textContent = 'Embaralhando...';
+                cardDrawArea.innerHTML = '';
+
+                const shuffleContainer = document.createElement('div');
+                shuffleContainer.className = 'shuffle-container flex flex-wrap justify-center items-center gap-2 mb-4';
+
+                for (let i = 0; i < 7; i++) {
+                    const shuffleCard = document.createElement('div');
+                    shuffleCard.className = 'card-face card-back';
+                    shuffleCard.innerHTML = `&#x2728;`;
+                    shuffleCard.style.width = '80px';
+                    shuffleCard.style.height = '138px';
+                    shuffleCard.style.position = 'relative';
+                    shuffleCard.style.transition = 'transform 0.5s ease-out';
+                    shuffleContainer.appendChild(shuffleCard);
+                }
+                cardDrawArea.appendChild(shuffleContainer);
+
+                let shuffleCount = 0;
+                const shuffleInterval = setInterval(() => {
+                    const cards = shuffleContainer.children;
+                    const randomCard = cards[Math.floor(Math.random() * cards.length)];
+                    const randomX = (Math.random() - 0.5) * 100;
+                    const randomY = (Math.random() - 0.5) * 50;
+                    const randomRot = (Math.random() - 0.5) * 40;
+                    randomCard.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg)`;
+                    shuffleCount++;
+                    if (shuffleCount > 20) {
+                        clearInterval(shuffleInterval);
+                        Array.from(cards).forEach(c => c.style.transform = 'translate(0,0) rotate(0)');
+                        setTimeout(revealCard, 500);
+                    }
+                }, 100);
+
+            }
+
+            function revealCard() {
+                cardDrawArea.innerHTML = '';
+                const randomCard = tarotDeck[Math.floor(Math.random() * tarotDeck.length)];
+
+                const cardFlipContainer = document.createElement('div');
+                cardFlipContainer.className = 'card-flip mx-auto';
+                cardFlipContainer.innerHTML = `
+            <div class="card-face card-back">✨</div>
+            <div class="card-face card-front">
+                <img src="${randomCard.imagem}" alt="${randomCard.nome}" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/150x258/f5eeda/8c3b3b?text=${randomCard.nome.replace(/\s/g, '+')}';">
+            </div>
+        `;
+
+                const cardInfoContainer = document.createElement('div');
+                cardInfoContainer.className = 'text-left max-w-lg opacity-0 transition-opacity duration-1000';
+
+                cardDrawArea.appendChild(cardFlipContainer);
+                cardDrawArea.appendChild(cardInfoContainer);
+
+                setTimeout(() => {
+                    cardFlipContainer.classList.add('is-flipped');
+                }, 100);
+
+                setTimeout(() => {
+                    const keywords = randomCard.palavras_chave.slice(0, 4).join(', ');
+                    cardInfoContainer.innerHTML = `
+                <h3 class="text-3xl mb-2 text-title-red">${randomCard.nome}</h3>
+                <p class="mb-4">${randomCard.descricao.substring(0, 150)}...</p>
+                <p class="mb-4"><strong>Palavras-chave:</strong> ${keywords}...</p>
+                <button id="see-more-btn" class="bg-vintage-blue text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:bg-blue-800 transition-all">Ver Detalhes</button>
+            `;
+                    cardInfoContainer.classList.remove('opacity-0');
+                    document.getElementById('see-more-btn').addEventListener('click', () => showCardDetails(randomCard));
+
+                    drawCardBtn.disabled = false;
+                    drawThreeCardsBtn.disabled = false;
+                    drawCardBtn.textContent = 'Tirar Outra Carta';
+                }, 1100);
+            }
+
+            function drawThreeCards() {
+                drawCardBtn.disabled = true;
+                drawThreeCardsBtn.disabled = true;
+                drawThreeCardsBtn.textContent = 'Embaralhando...';
+                cardDrawArea.innerHTML = '';
+
+                // Shuffle animation logic (similar to single card but could be simplified or just reused)
+                const shuffleContainer = document.createElement('div');
+                shuffleContainer.className = 'shuffle-container flex flex-wrap justify-center items-center gap-2 mb-4 w-full';
+
+                // create slightly more particles for effect
+                for (let i = 0; i < 10; i++) {
+                    const shuffleCard = document.createElement('div');
+                    shuffleCard.className = 'card-face card-back';
+                    shuffleCard.innerHTML = `&#x2728;`;
+                    shuffleCard.style.width = '60px'; // smaller for shuffle
+                    shuffleCard.style.height = '100px';
+                    shuffleCard.style.position = 'relative';
+                    shuffleCard.style.transition = 'transform 0.5s ease-out';
+                    shuffleContainer.appendChild(shuffleCard);
+                }
+                cardDrawArea.appendChild(shuffleContainer);
+
+                let shuffleCount = 0;
+                const shuffleInterval = setInterval(() => {
+                    const cards = shuffleContainer.children;
+                    const randomCard = cards[Math.floor(Math.random() * cards.length)];
+                    const randomX = (Math.random() - 0.5) * 150;
+                    const randomY = (Math.random() - 0.5) * 50;
+                    const randomRot = (Math.random() - 0.5) * 60;
+                    randomCard.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg)`;
+                    shuffleCount++;
+                    if (shuffleCount > 25) {
+                        clearInterval(shuffleInterval);
+                        setTimeout(revealThreeCards, 500);
+                    }
+                }, 80);
+            }
+
+            function revealThreeCards() {
+                cardDrawArea.innerHTML = '';
+
+                // Select 3 unique cards
+                const selectedIndices = new Set();
+                while (selectedIndices.size < 3) {
+                    selectedIndices.add(Math.floor(Math.random() * tarotDeck.length));
+                }
+                const cards = Array.from(selectedIndices).map(i => tarotDeck[i]);
+                const timeLabels = ['Passado', 'Presente', 'Futuro'];
+
+                const cardsContainer = document.createElement('div');
+                cardsContainer.className = 'flex flex-col md:flex-row gap-6 justify-center items-center w-full';
+
+                cards.forEach((card, index) => {
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.className = 'flex flex-col items-center';
+
+                    const timeLabel = document.createElement('h3');
+                    timeLabel.className = 'text-2xl text-title-red font-bold mb-2';
+                    timeLabel.textContent = timeLabels[index];
+
+                    const cardFlip = document.createElement('div');
+                    cardFlip.className = 'card-flip';
+                    cardFlip.innerHTML = `
+                        <div class="card-face card-back">✨</div>
+                        <div class="card-face card-front">
+                            <img src="${card.imagem}" alt="${card.nome}" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/150x258/f5eeda/8c3b3b?text=${card.nome.replace(/\s/g, '+')}';">
+                        </div>
+                     `;
+
+                    const infoBtn = document.createElement('button');
+                    infoBtn.className = 'mt-4 text-sm bg-transparent border border-title-red text-title-red font-bold py-1 px-3 rounded hover:bg-title-red hover:text-white transition-all opacity-0';
+                    infoBtn.textContent = 'Ver ' + card.nome;
+                    infoBtn.addEventListener('click', () => showCardDetails(card));
+
+                    cardWrapper.appendChild(timeLabel);
+                    cardWrapper.appendChild(cardFlip);
+                    cardWrapper.appendChild(infoBtn);
+                    cardsContainer.appendChild(cardWrapper);
+
+                    // Staggered reveal
+                    setTimeout(() => {
+                        cardFlip.classList.add('is-flipped');
+                        infoBtn.classList.remove('opacity-0');
+                    }, 300 + (index * 500));
+                });
+
+                cardDrawArea.appendChild(cardsContainer);
+
+                drawCardBtn.disabled = false;
+                drawThreeCardsBtn.disabled = false;
+                drawThreeCardsBtn.textContent = 'Tirar Três Cartas';
+            }
+
+            closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+
+            searchBox.addEventListener('input', filterCards);
+            suitFilter.addEventListener('change', filterCards);
+            elementFilter.addEventListener('change', filterCards);
+            resetBtn.addEventListener('click', () => {
+                searchBox.value = '';
+                suitFilter.value = '';
+                elementFilter.value = '';
+                displayCards(tarotDeck);
+            });
+
+            drawCardBtn.addEventListener('click', drawRandomCard);
+            drawThreeCardsBtn.addEventListener('click', drawThreeCards);
+
+            displayCards(tarotDeck);
+        });
+    </script>
+</body>
+
+</html>
