@@ -8,6 +8,7 @@ Grimório interativo com as 78 cartas do Tarot Rider-Waite, construído como um 
 - filtros por naipe, elemento, signo e planeta;
 - página de detalhes para cada carta;
 - tiragens de uma carta e de três cartas (Passado, Presente e Futuro);
+- interpretação opcional das tiragens com Workers AI;
 - imagens armazenadas localmente em `images/cards/`;
 - instalação como aplicativo (PWA), com ícone próprio;
 - instalação promovida pela interface nativa do navegador, como no projeto Lenormand;
@@ -19,6 +20,8 @@ Grimório interativo com as 78 cartas do Tarot Rider-Waite, construído como um 
 - `css/styles.css`: identidade visual e responsividade;
 - `js/cards.js`: dados preservados das 78 cartas;
 - `js/app.js`: navegação, busca, filtros, detalhes e tiragens;
+- `cloudflare-worker.js`: Worker de interpretação simbólica com IA;
+- `README-CLOUDFLARE-WORKER.md`: instruções de publicação do Worker;
 - `icons/`: ícones próprios do aplicativo em 180, 192 e 512 pixels;
 - `cartas/`: módulo separado reservado para futuras páginas individuais.
 

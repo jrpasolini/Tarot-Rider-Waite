@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tarot-rider-waite-v3-offline';
+const CACHE_NAME = 'tarot-rider-waite-v5-ai-final';
 
 const CORE_ASSETS = [
   './',

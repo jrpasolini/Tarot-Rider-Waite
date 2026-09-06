@@ -84,15 +84,33 @@
                 </div>
                 <div class="oracle-question-panel max-w-3xl mx-auto mb-7 text-left">
                     <label for="oracle-question" class="oracle-question-label">Sua pergunta ao Tarot</label>
-                    <textarea id="oracle-question" rows="3" maxlength="800" placeholder="Escreva sua pergunta ou intenção para esta tiragem." class="oracle-question-input"></textarea>
-                    <div class="oracle-question-meta"><span>A pergunta permanece somente neste navegador.</span><span id="oracle-question-count">0/800</span></div>
+                    <textarea id="oracle-question" rows="3" maxlength="800" placeholder="Escreva sua pergunta aqui. A tiragem funciona mesmo sem IA; a pergunta só será enviada se você solicitar uma interpretação." class="oracle-question-input"></textarea>
+                    <div class="oracle-question-meta"><span>A pergunta só é enviada quando você pede a interpretação com IA.</span><span id="oracle-question-count">0/800</span></div>
                 </div>
                 <div class="draw-actions flex flex-wrap justify-center gap-4">
                     <button id="draw-button" type="button" class="draw-button draw-button-primary">Tirar uma carta</button>
                     <button id="draw-three-button" type="button" class="draw-button draw-button-secondary">Tirar três cartas</button>
                 </div>
-                <div class="draw-hint mt-6 text-sm md:text-base">Clique em uma carta revelada para consultar todos os seus detalhes.</div>
+                <div class="draw-hint mt-6 text-sm md:text-base">Clique em uma carta revelada para consultar seus detalhes. Se quiser uma leitura conjunta, use a interpretação com IA.</div>
                 <div id="shuffle-animation-container" class="mt-10 flex flex-wrap justify-center items-start min-h-96 hidden gap-5 md:gap-8" aria-live="polite"></div>
+
+                <div id="ai-reading-actions" class="ai-reading-actions hidden">
+                    <button id="interpret-ai-button" type="button" class="ai-interpret-button" disabled>
+                        <span aria-hidden="true">✦</span> Interpretar esta tiragem com IA
+                    </button>
+                    <p id="ai-reading-hint" class="ai-reading-hint">Escreva uma pergunta e faça uma tiragem para liberar a interpretação.</p>
+                </div>
+
+                <section id="ai-reading-result" class="ai-reading-result hidden" aria-live="polite">
+                    <div id="ai-reading-loading" class="ai-reading-loading hidden">
+                        <span class="ai-loading-symbol" aria-hidden="true">✦</span>
+                        <div>
+                            <strong>Consultando o Tarot…</strong>
+                            <p>A leitura está sendo construída a partir da sua pergunta e das cartas sorteadas.</p>
+                        </div>
+                    </div>
+                    <div id="ai-reading-content"></div>
+                </section>
             </section>
         </main>
 
