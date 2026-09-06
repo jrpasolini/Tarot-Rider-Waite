@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudo Interativo: O Arcano O Mago</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Chosen Palette: Mystical Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a 'Thematic Study Hub' to transform linear information into an engaging, non-linear exploration of 'O Mago'. A main sticky navigation allows users to jump to key themes: 'Visão Geral' (with an interactive card analysis), 'Essência' (core meanings), 'Correspondências' (an interactive dashboard for astrology, kabbalah, etc.), 'Interpretações' (practical meanings with a keyword chart), 'A Jornada' (contextualizing its place in the Major Arcana), and 'Práticas' (meditations/rituals). This structure empowers users to control their learning path, prioritizing active discovery and visual engagement over passive reading, perfectly suited for the rich, multi-faceted nature of the Tarot. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation -> Interaction -> Justification. 'Visão Geral': Analyze card symbols -> Interactive Diagram -> Hover/Click -> Makes dense iconography accessible. 'Essência': Compare upright/reversed meanings -> Dynamic Text Blocks -> Tab/Toggle -> Clarifies duality. 'Correspondências': Explore esoteric links -> Interactive Dashboard with a Radar Chart (Chart.js) -> Filter/Select -> Reveals hidden connections visually. 'Interpretações': Show keywords -> Bar Chart (Chart.js) -> Hover -> Quick, comparative overview for readings. 'A Jornada': Show progression -> HTML/CSS Timeline -> Scroll/Click -> Provides narrative context. 'Práticas': Offer exercises -> Styled Text Cards -> Static Display -> Actionable guidance. This confirms NO SVG/Mermaid and supports a non-linear, interactive structure. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #3f3f46;
+        }
+
+        h1,
+        h2,
+        h3,
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #A16207;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link.active,
+        .nav-link:hover {
+            color: #A16207;
+        }
+
+        .nav-link.active::after,
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .card-hotspot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid #FBBF24;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #A16207;
+        }
+
+        .card-hotspot:hover {
+            background-color: #FBBF24;
+            transform: scale(1.2);
+            color: #ffffff;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .tab-button.active {
+            background-color: #FEF3C7;
+            color: #A16207;
+            border-bottom: 2px solid #FBBF24;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-FDFBF8/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4">
+            <nav class="flex justify-center items-center h-20">
+                <ul class="flex space-x-6 md:space-x-10 text-lg text-stone-600">
+                    <li><a href="#visao-geral" class="nav-link active">Visão Geral</a></li>
+                    <li><a href="#essencia" class="nav-link">Essência</a></li>
+                    <li><a href="#correspondencias" class="nav-link">Correspondências</a></li>
+                    <li><a href="#interpretacoes" class="nav-link">Interpretações</a></li>
+                    <li><a href="#jornada" class="nav-link">A Jornada</a></li>
+                    <li><a href="#praticas" class="nav-link">Práticas</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-12">
+        <!-- Section: Visão Geral -->
+        <section id="visao-geral" class="mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h1 class="text-6xl font-display text-yellow-900">O Mago</h1>
+                <p class="text-2xl text-stone-500 mt-2">Arcano Maior I: O Poder da Manifestação</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="relative">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg"
+                        alt="A carta do Mago do Tarot" id="card-image"
+                        class="rounded-2xl shadow-2xl w-full max-w-md mx-auto aspect-[2/3.5] object-cover">
+                    <div id="hotspot-container"></div>
+                </div>
+                <div id="card-analysis"
+                    class="bg-yellow-50/50 p-8 rounded-2xl shadow-lg border border-yellow-200 min-h-[300px]">
+                    <h3 class="text-2xl font-display text-yellow-900 mb-4">Análise Interativa</h3>
+                    <p class="text-stone-600">Passe o mouse ou clique nos pontos numerados na imagem para explorar o
+                        rico simbolismo da carta O Mago. Cada elemento conta uma parte da história de poder, habilidade
+                        e conexão entre o divino e o material.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Essência -->
+        <section id="essencia" class="mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-5xl font-display text-yellow-900">A Essência do Mago</h2>
+                <p class="text-xl text-stone-500 max-w-3xl mx-auto mt-4">O Mago representa o poder da vontade, a
+                    habilidade de transformar ideias em realidade. Ele é o mestre dos elementos, o comunicador e o
+                    catalisador do início da jornada do autoconhecimento.</p>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-center border-b border-yellow-200 mb-6">
+                    <button
+                        class="tab-button flex-1 py-3 px-6 text-lg text-stone-600 transition-colors duration-300 active"
+                        data-tab="vertical">Direita</button>
+                    <button class="tab-button flex-1 py-3 px-6 text-lg text-stone-600 transition-colors duration-300"
+                        data-tab="invertido">Invertido</button>
+                </div>
+                <div id="tab-content" class="bg-white p-8 rounded-xl shadow-md">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Correspondências -->
+        <section id="correspondencias" class="mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-5xl font-display text-yellow-900">Painel de Correspondências</h2>
+                <p class="text-xl text-stone-500 max-w-3xl mx-auto mt-4">O Mago se conecta a diversos sistemas de
+                    sabedoria. Este painel interativo revela suas associações com a astrologia, numerologia, elementos e
+                    mais, mostrando a profundidade de seu arquétipo.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div id="correspondencias-container" class="grid grid-cols-2 gap-6">
+                    <!-- Content will be injected by JS -->
+                </div>
+                <div class="chart-container">
+                    <canvas id="correspondenciasChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Interpretações Práticas -->
+        <section id="interpretacoes" class="mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-5xl font-display text-yellow-900">Interpretações Práticas</h2>
+                <p class="text-xl text-stone-500 max-w-3xl mx-auto mt-4">Em uma leitura, O Mago traz mensagens de poder
+                    e iniciativa. O gráfico abaixo destaca as palavras-chave mais comuns associadas a ele em diferentes
+                    áreas da vida.</p>
+            </div>
+            <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <div class="chart-container h-96">
+                    <canvas id="interpretacoesChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: A Jornada -->
+        <section id="jornada" class="mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-5xl font-display text-yellow-900">A Jornada do Mago</h2>
+                <p class="text-xl text-stone-500 max-w-3xl mx-auto mt-4">O Mago, como Arcano I, é o primeiro passo
+                    consciente após o potencial puro do Louco. Ele inicia a jornada pelos Arcanos Maiores, utilizando as
+                    ferramentas da criação para moldar o caminho à frente.</p>
+            </div>
+            <div id="jornada-container" class="grid md:grid-cols-3 gap-8">
+                <!-- Content will be injected by JS -->
+            </div>
+        </section>
+
+        <!-- Section: Práticas -->
+        <section id="praticas" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-5xl font-display text-yellow-900">Práticas e Meditação</h2>
+                <p class="text-xl text-stone-500 max-w-3xl mx-auto mt-4">Conecte-se com a energia do Mago. Use estas
+                    práticas para despertar seu poder interior de manifestação, clareza e ação.</p>
+            </div>
+            <div id="praticas-container" class="space-y-8 max-w-4xl mx-auto">
+                <!-- Content will be injected by JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-yellow-900 text-yellow-100 mt-24 py-8">
+        <div class="container mx-auto text-center">
+            <p>Uma exploração interativa dos arquétipos do Tarot.</p>
+        </div>
+    </footer>
+
+    <script>
+        const data = {
+            card: {
+                title: "O Mago",
+                number: "I",
+                description: "Representa poder, habilidade, concentração, ação e recursos. É o mestre da manifestação, o canal entre o mundo espiritual e o material.",
+                image_url: "https://images.pexels.com/photos/15777353/pexels-photo-15777353.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+            },
+            hotspots: [
+                { id: 1, top: '15%', left: '45%', title: "Lemniscata (Símbolo do Infinito)", description: "Acima de sua cabeça, simboliza o potencial ilimitado, a consciência cósmica e a natureza eterna da energia." },
+                { id: 2, top: '50%', left: '65%', title: "Mão Apontando para a Terra", description: "Sua mão esquerda aponta para o chão, canalizando a energia divina para o plano material. É a materialização." },
+                { id: 3, top: '10%', left: '28%', title: "Bastão Erguido", description: "Com a mão direita, ele ergue um bastão, simbolizando sua conexão com o divino e a capacidade de atrair poder do alto." },
+                { id: 4, top: '58%', left: '35%', title: "Mesa com os Quatro Elementos", description: "Sobre a mesa estão os símbolos dos quatro naipes (Paus, Copas, Espadas, Ouros), representando seu domínio sobre todos os aspectos da vida." },
+                { id: 5, top: '36%', left: '53%', title: "Manto Vermelho", description: "Simboliza paixão, energia, ação e poder. Representa seu engajamento ativo e consciente com o mundo." },
+                { id: 6, top: '76%', left: '45%', title: "Jardim de Rosas e Lírios", description: "As rosas representam o desejo e a paixão, enquanto os lírios simbolizam a pureza de pensamento e a verdade espiritual. Ele equilibra ambos." }
+            ],
+            essencia: {
+                vertical: {
+                    title: "Poder e Manifestação",
+                    content: "Quando O Mago aparece em pé, ele sinaliza um momento de poder, habilidade e recursos para transformar seus desejos em realidade. É um chamado à ação. Você tem todas as ferramentas necessárias para ter sucesso. É hora de usar sua força de vontade, concentração e criatividade para iniciar novos projetos e manifestar seus objetivos. A comunicação é clara e eficaz, e sua autoconfiança está em alta.",
+                    keywords: ["Vontade", "Manifestação", "Habilidade", "Recursos", "Poder", "Comunicação", "Iniciativa"]
+                },
+                invertido: {
+                    title: "Manipulação e Potencial Bloqueado",
+                    content: "Invertido, O Mago adverte sobre o engano, a manipulação e o mau uso do poder. Pode indicar que talentos e habilidades estão sendo desperdiçados ou usados para fins egoístas. Há um risco de ilusão, promessas vazias e falta de planejamento. Pode também apontar para uma insegurança que impede a ação, resultando em potencial não realizado, procrastinação e falta de foco. É um alerta para avaliar intenções e métodos.",
+                    keywords: ["Manipulação", "Engano", "Charlatanismo", "Potencial desperdiçado", "Insegurança", "Falta de foco"]
+                }
+            },
+            correspondencias: [
+                { icon: '🪐', title: "Planeta", value: "Mercúrio", description: "Rege a comunicação, o intelecto e a habilidade." },
+                { icon: '🔢', title: "Numerologia", value: "1", description: "Simboliza novos inícios, individualidade e liderança." },
+                { icon: '🌬️', title: "Elemento", value: "Ar", description: "Associado à mente, ao pensamento e à comunicação." },
+                { icon: '💎', title: "Cristal", value: "Ágata", description: "Promove o equilíbrio e a clareza mental." },
+                { icon: '🌿', title: "Erva", value: "Lavanda", description: "Ajuda na concentração e na clareza de propósito." },
+                { icon: '♈', title: "Signo", value: "Gêmeos / Virgem", description: "Regidos por Mercúrio, ligados à comunicação e análise." }
+            ],
+            interpretacoes: [
+                { area: 'Amor', significado: "Início de um romance, poder de atração, comunicação eficaz." },
+                { area: 'Carreira', significado: "Novos empreendimentos, uso de talentos, sucesso, promoção." },
+                { area: 'Finanças', significado: "Oportunidades de ganhos, habilidade para negócios." },
+                { area: 'Saúde', significado: "Vitalidade, poder de recuperação, foco mental." },
+                { area: 'Conselho', significado: "Aja agora, use seus talentos, concentre sua vontade." }
+            ],
+            jornada: [
+                { arcano: "O Louco (0)", licao: "O potencial puro, o salto de fé inicial." },
+                { arcano: "O Mago (I)", licao: "A canalização do potencial em ação e vontade consciente." },
+                { arcano: "A Sacerdotisa (II)", licao: "O mergulho na intuição e no conhecimento oculto." }
+            ],
+            praticas: [
+                { title: "Meditação da Manifestação", content: "Sente-se confortavelmente com a carta do Mago à sua frente. Feche os olhos e visualize seu objetivo com clareza cristalina. Sinta a energia do Mago fluindo através de você, dando-lhe o poder, a confiança e as ferramentas para tornar essa visão uma realidade. Repita o mantra: 'Eu tenho o poder de criar a minha realidade'." },
+                { title: "Altar dos Elementos", content: "Crie um pequeno altar temporário com representações dos quatro elementos: uma vela (Fogo), um copo com água (Água), um cristal ou pedra (Terra) e um incenso ou pena (Ar). Use este espaço para focar suas intenções e planejar os passos concretos para alcançar seus objetivos, invocando o equilíbrio e a maestria do Mago." }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hotspotContainer = document.getElementById('hotspot-container');
+            const cardAnalysis = document.getElementById('card-analysis');
+            const initialAnalysisHTML = cardAnalysis.innerHTML;
+
+            data.hotspots.forEach(hotspot => {
+                const spot = document.createElement('div');
+                spot.className = 'card-hotspot';
+                spot.style.top = hotspot.top;
+                spot.style.left = hotspot.left;
+                spot.textContent = hotspot.id;
+
+                spot.addEventListener('mouseenter', () => {
+                    cardAnalysis.innerHTML = `
+                        <h3 class="text-2xl font-display text-yellow-900 mb-2">${hotspot.title}</h3>
+                        <p class="text-stone-700">${hotspot.description}</p>
+                    `;
+                });
+
+                spot.addEventListener('mouseleave', () => {
+                    cardAnalysis.innerHTML = initialAnalysisHTML;
+                });
+
+                hotspotContainer.appendChild(spot);
+            });
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContent = document.getElementById('tab-content');
+
+            function updateTabContent(tabName) {
+                const contentData = data.essencia[tabName];
+                tabContent.innerHTML = `
+                    <h3 class="text-3xl font-display text-yellow-900 mb-4">${contentData.title}</h3>
+                    <p class="text-stone-700 text-lg mb-6">${contentData.content}</p>
+                    <div class="flex flex-wrap gap-3">
+                        ${contentData.keywords.map(kw => `<span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full">${kw}</span>`).join('')}
+                    </div>
+                `;
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateTabContent(button.dataset.tab);
+                });
+            });
+
+            updateTabContent('vertical');
+
+            const correspondenciasContainer = document.getElementById('correspondencias-container');
+            data.correspondencias.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300";
+                card.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <span class="text-4xl">${item.icon}</span>
+                        <div>
+                            <h4 class="font-bold text-lg text-yellow-900">${item.title}: ${item.value}</h4>
+                            <p class="text-stone-600 text-sm">${item.description}</p>
+                        </div>
+                    </div>
+                `;
+                correspondenciasContainer.appendChild(card);
+            });
+
+            const corrCtx = document.getElementById('correspondenciasChart').getContext('2d');
+            new Chart(corrCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Poder Pessoal', 'Comunicação', 'Iniciativa', 'Intelecto', 'Manifestação', 'Habilidade'],
+                    datasets: [{
+                        label: 'Atributos do Mago',
+                        data: [9, 10, 9, 8, 10, 9],
+                        backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                        borderColor: 'rgba(217, 119, 6, 1)',
+                        pointBackgroundColor: 'rgba(217, 119, 6, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(217, 119, 6, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(168, 162, 158, 0.3)' },
+                            grid: { color: 'rgba(168, 162, 158, 0.3)' },
+                            pointLabels: { font: { size: 14 }, color: '#44403c' },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            ticks: {
+                                backdropColor: '#FDFBF8',
+                                color: '#78716c'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            const interpCtx = document.getElementById('interpretacoesChart').getContext('2d');
+            new Chart(interpCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.interpretacoes.map(item => item.area),
+                    datasets: [{
+                        label: 'Influência do Mago',
+                        data: [90, 95, 85, 80, 100],
+                        backgroundColor: [
+                            'rgba(252, 165, 165, 0.6)',
+                            'rgba(134, 239, 172, 0.6)',
+                            'rgba(253, 224, 71, 0.6)',
+                            'rgba(147, 197, 253, 0.6)',
+                            'rgba(196, 181, 253, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(202, 138, 4, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { display: false },
+                            ticks: { display: false }
+                        },
+                        y: {
+                            grid: { color: 'rgba(168, 162, 158, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return data.interpretacoes[context.dataIndex].significado;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const jornadaContainer = document.getElementById('jornada-container');
+            data.jornada.forEach((item, index) => {
+                const card = document.createElement('div');
+                const isCurrent = item.arcano.includes("Mago");
+                card.className = `p-6 rounded-xl shadow-sm text-center transform transition-transform duration-300 ${isCurrent ? 'bg-yellow-200/50 border-2 border-yellow-400 scale-105' : 'bg-white'}`;
+                card.innerHTML = `
+                    <h4 class="font-bold text-xl font-display text-yellow-900 mb-2">${item.arcano}</h4>
+                    <p class="text-stone-600 text-sm mt-1">${item.licao}</p>
+                `;
+                jornadaContainer.appendChild(card);
+            });
+
+            const praticasContainer = document.getElementById('praticas-container');
+            data.praticas.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-yellow-100/50 p-6 rounded-xl shadow-sm border border-yellow-200";
+                card.innerHTML = `
+                    <h4 class="font-bold text-lg text-yellow-900 mb-2">${item.title}</h4>
+                    <p class="text-stone-700">${item.content}</p>
+                `;
+                praticasContainer.appendChild(card);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+
+            function changeActiveLink() {
+                let index = sections.length;
+                while (--index && window.scrollY + 100 < sections[index].offsetTop) { }
+
+                navLinks.forEach((link) => link.classList.remove('active'));
+                if (index >= 0 && navLinks[index]) {
+                    navLinks[index].classList.add('active');
+                }
+            }
+
+            window.addEventListener('scroll', changeActiveLink, { passive: true });
+            changeActiveLink();
+        });
+    </script>
+</body>
+
+</html>

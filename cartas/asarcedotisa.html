@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudo Interativo: O Arcano A Sacerdotisa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Mystic Twilight -->
+    <!-- Application Structure Plan: The SPA is structured as a 'Thematic Study Hub' for an in-depth, non-linear exploration of 'A Sacerdotisa'. It features a sticky main navigation for direct access to key themes: 'Visão Geral' (with an interactive card analysis), 'Essência' (core meanings), 'Correspondências' (an interactive dashboard for astrology, kabbalah, etc.), 'Interpretações' (practical meanings with a keyword comparison chart), 'A Jornada' (contextualizing her role in the Major Arcana), and 'Práticas' (meditations/journaling prompts). This design transforms the source text into an active learning experience, allowing users to explore the arcana's complex symbolism at their own pace. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation -> Interaction -> Justification. 1. Card Symbolism -> Explore Details -> Interactive Image Hotspots -> Click to reveal text -> Allows deep, self-directed study of the card's rich iconography. 2. Keywords (Vertical vs. Inverted) -> Compare -> Bar Chart (Chart.js) -> Static display -> Provides a quick visual summary of the card's core dualities. 3. Correspondences (Astrology, etc.) -> Organize & Compare -> Tabbed Interface -> Click buttons to switch content -> Efficiently organizes diverse but related esoteric data sets. 4. Journey through Arcana -> Show Context -> HTML/CSS Timeline -> Static display -> Places the card within the broader narrative of the Major Arcana. NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav-link.active {
+            color: #4338ca;
+            border-bottom-color: #4338ca;
+        }
+
+        .hotspot {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .hotspot:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.7);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+
+        /* Melhorias na navegação */
+        .nav-container {
+            position: relative;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .nav-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-list {
+            display: flex;
+            min-width: max-content;
+            padding: 0 1rem;
+        }
+
+        .nav-link {
+            flex-shrink: 0;
+            padding: 0.75rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: #4338ca;
+            border-bottom-color: #4338ca;
+        }
+
+        .nav-link.active {
+            background-color: rgba(67, 56, 202, 0.1);
+            color: #4338ca;
+            border-bottom-color: #4338ca;
+        }
+
+        /* Indicador de scroll para navegação em mobile */
+        @media (max-width: 768px) {
+            .nav-container::after {
+                content: '→';
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                background: linear-gradient(to right, transparent, white);
+                padding-left: 2rem;
+                color: #6b7280;
+                pointer-events: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="container mx-auto px-4 py-3">
+            <h1 id="main-title" class="text-2xl md:text-3xl font-bold text-indigo-900 text-center"></h1>
+        </div>
+        <nav class="bg-white/70 backdrop-blur-md border-b border-slate-200">
+            <div class="nav-container">
+                <ul class="nav-list container mx-auto text-sm md:text-base font-medium text-slate-600">
+                    <li><a href="#visao-geral" class="nav-link" data-section="visao-geral">Visão Geral</a></li>
+                    <li><a href="#essencia" class="nav-link" data-section="essencia">A Essência</a></li>
+                    <li><a href="#correspondencias" class="nav-link"
+                            data-section="correspondencias">Correspondências</a></li>
+                    <li><a href="#interpretacoes" class="nav-link" data-section="interpretacoes">Interpretações</a></li>
+                    <li><a href="#jornada" class="nav-link" data-section="jornada">A Jornada</a></li>
+                    <li><a href="#praticas" class="nav-link" data-section="praticas">Práticas</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="visao-geral" class="mb-16 scroll-mt-24">
+            <h2 id="section-title-visao-geral" class="text-3xl font-bold text-slate-800 mb-4 text-center"></h2>
+            <p id="intro-text" class="max-w-3xl mx-auto text-center text-slate-600 mb-12"></p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+                <div class="lg:col-span-2 relative w-full max-w-lg mx-auto">
+                    <img id="card-image"
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg"
+                        alt="Carta da Sacerdotisa" class="rounded-2xl shadow-2xl w-full">
+                    <button id="hotspot-figura" data-key="figura"
+                        class="hotspot absolute bg-white/50 rounded-full w-6 h-6 ring-2 ring-white backdrop-blur-sm"
+                        style="top: 30%; left: 46%;"></button>
+                    <button id="hotspot-pilares" data-key="pilares"
+                        class="hotspot absolute bg-white/50 rounded-full w-6 h-6 ring-2 ring-white backdrop-blur-sm"
+                        style="top: 40%; left: 10%;"></button>
+                    <button id="hotspot-veu" data-key="veu"
+                        class="hotspot absolute bg-white/50 rounded-full w-6 h-6 ring-2 ring-white backdrop-blur-sm"
+                        style="top: 40%; left: 60%;"></button>
+                    <button id="hotspot-lua" data-key="lua"
+                        class="hotspot absolute bg-white/50 rounded-full w-6 h-6 ring-2 ring-white backdrop-blur-sm"
+                        style="top: 23%; left: 47%;"></button>
+                    <button id="hotspot-pergaminho" data-key="pergaminho"
+                        class="hotspot absolute bg-white/50 rounded-full w-6 h-6 ring-2 ring-white backdrop-blur-sm"
+                        style="top: 54%; left: 45%;"></button>
+                    <button id="hotspot-cruz" data-key="cruz"
+                        class="hotspot absolute bg-white/50 rounded-full w-6 h-6 ring-2 ring-white backdrop-blur-sm"
+                        style="top: 42%; left: 47%;"></button>
+                </div>
+
+                <div id="card-info-panel" class="lg:col-span-1 p-6 bg-white rounded-2xl shadow-lg h-full sticky top-32">
+                    <h3 id="info-title" class="font-bold text-xl text-indigo-800 mb-2">Clique em um ponto ⚪️</h3>
+                    <p id="info-content" class="text-slate-600">Explore os símbolos na carta para revelar seus
+                        significados ocultos e a profunda sabedoria que A Sacerdotisa guarda.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="essencia" class="mb-16 scroll-mt-24 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-8">A Essência do Arcano</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-green-700 mb-4">Posição Vertical</h3>
+                    <div id="essencia-vertical" class="flex flex-wrap justify-center gap-2"></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-red-700 mb-4">Posição Invertida</h3>
+                    <div id="essencia-invertida" class="flex flex-wrap justify-center gap-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="correspondencias" class="mb-16 scroll-mt-24 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">Correspondências Esotéricas</h2>
+            <p class="max-w-2xl mx-auto text-slate-600 mb-8">A Sacerdotisa está conectada a um vasto sistema de
+                símbolos. Explore suas correspondências para aprofundar seu entendimento.</p>
+            <div class="bg-white p-6 rounded-2xl shadow-lg max-w-3xl mx-auto">
+                <div id="correspondencias-tabs" class="flex flex-wrap justify-center gap-2 mb-6 border-b pb-4"></div>
+                <div id="correspondencias-content" class="text-left transition-opacity duration-300"></div>
+            </div>
+        </section>
+
+        <section id="interpretacoes" class="mb-16 scroll-mt-24 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">Gráfico de Interpretações</h2>
+            <p class="max-w-2xl mx-auto text-slate-600 mb-8">Este gráfico compara os principais temas da Sacerdotisa em
+                suas posições vertical e invertida, destacando a dualidade central do arcano: a sabedoria interior
+                versus a intuição bloqueada.</p>
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                <div class="chart-container">
+                    <canvas id="interpretationsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="jornada" class="mb-16 scroll-mt-24 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">A Jornada pelos Arcanos Maiores</h2>
+            <p class="max-w-2xl mx-auto text-slate-600 mb-8">A Sacerdotisa ocupa um lugar crucial na jornada da alma.
+                Ela representa a pausa para a introspecção após a ação inicial do Mago, um momento de aprendizado antes
+                da criação da Imperatriz.</p>
+            <div id="jornada-container" class="flex justify-center items-center gap-4 md:gap-8 flex-wrap"></div>
+        </section>
+
+        <section id="praticas" class="scroll-mt-24 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">Conectando-se com A Sacerdotisa</h2>
+            <p class="max-w-2xl mx-auto text-slate-600 mb-8">Para internalizar a energia da Sacerdotisa, a prática é
+                essencial. Use os exercícios abaixo para aprofundar sua conexão com a intuição e a sabedoria interior.
+            </p>
+            <div id="praticas-container" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"></div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 mt-12 border-t border-slate-200">
+        <p class="text-slate-500 text-sm">Estudo Interativo criado com base na análise de A Sacerdotisa.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const data = {
+                title: "Arcano II: A Sacerdotisa",
+                visaoGeral: {
+                    title: "O Véu Entre os Mundos",
+                    intro: "A Sacerdotisa, marcada com o número II, é um portal para os reinos da intuição e do conhecimento oculto. Ela personifica a sabedoria passiva, contrastando com a ação do Mago. Sua força reside no silêncio e na receptividade, um lembrete de que as respostas mais profundas vêm de dentro."
+                },
+                essencia: {
+                    vertical: ["Intuição", "Mistério", "Subconsciente", "Sabedoria Oculta", "Silêncio", "Paciência", "Reflexão", "Segredos", "Poder Feminino", "Espiritualidade"],
+                    invertida: ["Intuição Reprimida", "Segredos Maliciosos", "Fofocas", "Superficialidade", "Confusão", "Dissimulação", "Hipocrisia", "Estagnação", "Desconexão Interior"]
+                },
+                interactiveCard: {
+                    image: "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg",
+                    hotspots: {
+                        figura: {
+                            title: "A Figura Central",
+                            content: "Sentada, ela representa poder na estabilidade e contemplação, não na ação. Seu manto azul simboliza sabedoria e verdade, e as vestes brancas, pureza espiritual."
+                        },
+                        pilares: {
+                            title: "Os Pilares de Boaz e Jachin",
+                            content: "O pilar preto (Boaz) representa passividade e mistério. O pilar branco (Jachin) simboliza atividade e consciência. Ela senta-se em equilíbrio entre eles, mediando as dualidades."
+                        },
+                        veu: {
+                            title: "O Véu e as Romãs",
+                            content: "O véu é a fronteira entre o consciente e o inconsciente. As romãs simbolizam fertilidade, conhecimento divino e a conexão com os mistérios do submundo, como no mito de Perséfone."
+                        },
+                        lua: {
+                            title: "A Coroa e a Lua",
+                            content: "Sua coroa de Ísis e a lua crescente a seus pés representam as três fases da lua (crescente, cheia, minguante), simbolizando seu domínio sobre os ciclos, o tempo e a intuição."
+                        },
+                        pergaminho: {
+                            title: "O Pergaminho da TORA",
+                            content: "Ela segura um pergaminho com a inscrição 'TORA', que pode ser lido como Torah (lei divina), Taro ou Rota (roda). Parcialmente coberto, indica que o conhecimento precisa ser acessado tanto pelo intelecto quanto pela intuição."
+                        },
+                        cruz: {
+                            title: "A Cruz Solar",
+                            content: "A cruz de braços iguais em seu peito é um antigo símbolo de equilíbrio, integrando os planos espiritual e material e os quatro elementos."
+                        }
+                    }
+                },
+                interpretacoes: {
+                    chartTitle: "Palavras-Chave: Eixo Principal",
+                    verticalLabel: "Vertical (Sabedoria Interior)",
+                    invertidaLabel: "Invertida (Intuição Bloqueada)",
+                    data: {
+                        "Intuição": { vertical: 9, invertida: 2 },
+                        "Mistério": { vertical: 8, invertida: 3 },
+                        "Sabedoria": { vertical: 9, invertida: 2 },
+                        "Reflexão": { vertical: 7, invertida: 4 },
+                        "Segredos": { vertical: 6, invertida: 8 },
+                        "Confusão": { vertical: 2, invertida: 9 },
+                        "Superficialidade": { vertical: 1, invertida: 8 }
+                    }
+                },
+                correspondencias: {
+                    "Astrologia": {
+                        icon: "☾",
+                        title: "Astrologia: A Lua",
+                        content: "A Sacerdotisa é universalmente associada à Lua. A Lua governa as emoções, o subconsciente, os ciclos, os sonhos e o princípio feminino arquetípico. Ela é a personificação da energia lunar."
+                    },
+                    "Numerologia": {
+                        icon: "２",
+                        title: "Numerologia: O Número 2",
+                        content: "O número 2 representa dualidade, equilíbrio, parceria, receptividade e polaridade. A Sacerdotisa encarna a energia passiva e contemplativa do 2, em oposição à energia ativa e singular do 1 (O Mago)."
+                    },
+                    "Cabala": {
+                        icon: "‎ג",
+                        title: "Cabala: Caminho 13 (Gimel)",
+                        content: "Na Árvore da Vida, ela corresponde ao caminho que liga Kether (A Coroa) a Tiphareth (A Beleza). É associada à letra hebraica Gimel (camelo), simbolizando a travessia do abismo do conhecimento para unir o espiritual ao individual."
+                    },
+                    "Cristais": {
+                        icon: "💎",
+                        title: "Cristais",
+                        content: "Cristais que ressoam com sua energia incluem a Pedra da Lua (intuição, ciclos), Lápis-lazúli (sabedoria, verdade), Ametista (espiritualidade, proteção psíquica) e Selenita (clareza mental, conexão divina)."
+                    },
+                    "Elemento": {
+                        icon: "💧",
+                        title: "Elemento: Água",
+                        content: "Seu elemento é a Água, que rege as emoções, a intuição, o subconsciente e o fluxo. As águas vistas por trás do véu na carta reforçam essa conexão com as profundezas da psique."
+                    },
+                    "Arquétipos": {
+                        icon: "♀️",
+                        title: "Arquétipos",
+                        content: "Ela ressoa com arquétipos como a Virgem/Donzela (autossuficiência), a Sibila/Oráculo (canal da sabedoria divina), Perséfone (rainha do submundo) e a Anima (o inconsciente feminino)."
+                    },
+                },
+                jornada: [
+                    { arcano: "I. O Mago", licao: "Ação e Manifestação" },
+                    { arcano: "II. A Sacerdotisa", licao: "Intuição e Reflexão" },
+                    { arcano: "III. A Imperatriz", licao: "Criação e Abundância" },
+                ],
+                praticas: [
+                    {
+                        title: "Meditação Visual Guiada",
+                        content: "Sente-se em silêncio e visualize-se diante dos dois pilares. A Sacerdotisa está sentada entre eles. Permaneça em sua presença, sem fazer perguntas, apenas receptivo a imagens ou sentimentos que surgem. Peça permissão para ver além do véu e vislumbre as águas do inconsciente."
+                    },
+                    {
+                        title: "Perguntas para Reflexão (Journaling)",
+                        content: "Escreva sobre estas questões: Qual 'voz interior' tenho ignorado? Em que área da minha vida preciso de mais silêncio e menos ação? Que segredos meu subconsciente pode estar tentando me revelar através de sonhos ou sentimentos?"
+                    }
+                ]
+            };
+
+            // Inicialização do conteúdo
+            document.getElementById('main-title').textContent = data.title;
+            document.getElementById('section-title-visao-geral').textContent = data.visaoGeral.title;
+            document.getElementById('intro-text').textContent = data.visaoGeral.intro;
+            document.getElementById('card-image').src = data.interactiveCard.image;
+
+            // Essência - chips
+            const essenciaVerticalContainer = document.getElementById('essencia-vertical');
+            data.essencia.vertical.forEach(item => {
+                const chip = document.createElement('span');
+                chip.className = "bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full";
+                chip.textContent = item;
+                essenciaVerticalContainer.appendChild(chip);
+            });
+
+            const essenciaInvertidaContainer = document.getElementById('essencia-invertida');
+            data.essencia.invertida.forEach(item => {
+                const chip = document.createElement('span');
+                chip.className = "bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full";
+                chip.textContent = item;
+                essenciaInvertidaContainer.appendChild(chip);
+            });
+
+            // Hotspots interativos
+            const hotspots = document.querySelectorAll('.hotspot');
+            const infoTitle = document.getElementById('info-title');
+            const infoContent = document.getElementById('info-content');
+            hotspots.forEach(hotspot => {
+                hotspot.addEventListener('click', () => {
+                    const key = hotspot.dataset.key;
+                    const info = data.interactiveCard.hotspots[key];
+                    infoTitle.textContent = info.title;
+                    infoContent.textContent = info.content;
+                });
+            });
+
+            // Correspondências - tabs
+            const correspondenciasTabs = document.getElementById('correspondencias-tabs');
+            const correspondenciasContent = document.getElementById('correspondencias-content');
+            Object.keys(data.correspondencias).forEach((key, index) => {
+                const tab = document.createElement('button');
+                const item = data.correspondencias[key];
+                tab.className = "px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200";
+                tab.innerHTML = `<span class="mr-2">${item.icon}</span>${key}`;
+                if (index === 0) {
+                    tab.classList.add('bg-indigo-600', 'text-white');
+                } else {
+                    tab.classList.add('bg-slate-100', 'text-slate-700', 'hover:bg-indigo-100');
+                }
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('#correspondencias-tabs button').forEach(t => t.classList.remove('bg-indigo-600', 'text-white'));
+                    document.querySelectorAll('#correspondencias-tabs button').forEach(t => t.classList.add('bg-slate-100', 'text-slate-700', 'hover:bg-indigo-100'));
+                    tab.classList.add('bg-indigo-600', 'text-white');
+                    tab.classList.remove('bg-slate-100', 'text-slate-700', 'hover:bg-indigo-100');
+
+                    correspondenciasContent.classList.add('opacity-0');
+                    setTimeout(() => {
+                        correspondenciasContent.innerHTML = `
+                    <h4 class="font-bold text-xl text-indigo-900 mb-2">${item.title}</h4>
+                    <p class="text-slate-600">${item.content}</p>
+                `;
+                        correspondenciasContent.classList.remove('opacity-0');
+                    }, 150);
+                });
+                correspondenciasTabs.appendChild(tab);
+            });
+            document.querySelector('#correspondencias-tabs button').click();
+
+            // Gráfico de interpretações
+            const chartData = data.interpretacoes.data;
+            const chartLabels = Object.keys(chartData);
+            const verticalData = chartLabels.map(label => chartData[label].vertical);
+            const invertidaData = chartLabels.map(label => chartData[label].invertida);
+            const ctx = document.getElementById('interpretationsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: data.interpretacoes.verticalLabel,
+                            data: verticalData,
+                            backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: data.interpretacoes.invertidaLabel,
+                            data: invertidaData,
+                            backgroundColor: 'rgba(156, 163, 175, 0.6)',
+                            borderColor: 'rgba(107, 114, 128, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: data.interpretacoes.chartTitle, font: { size: 18 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += `Nível ${context.parsed.y}`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: { display: true, text: 'Intensidade' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Conceitos' }
+                        }
+                    }
+                }
+            });
+
+            // Jornada pelos arcanos
+            const jornadaContainer = document.getElementById('jornada-container');
+            data.jornada.forEach(item => {
+                const card = document.createElement('div');
+                const isCurrent = item.arcano.includes("Sacerdotisa");
+                card.className = `p-4 rounded-xl shadow-sm text-center ${isCurrent ? 'bg-indigo-600 text-white scale-110 shadow-2xl' : 'bg-white'}`;
+                card.innerHTML = `
+            <h4 class="font-bold text-lg mb-1">${item.arcano}</h4>
+            <p class="text-sm ${isCurrent ? 'text-indigo-200' : 'text-slate-600'}">${item.licao}</p>
+        `;
+                jornadaContainer.appendChild(card);
+            });
+
+            // Práticas
+            const praticasContainer = document.getElementById('praticas-container');
+            data.praticas.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white/80 p-6 rounded-xl shadow-sm text-left";
+                card.innerHTML = `
+            <h4 class="font-bold text-lg text-indigo-900 mb-2">${item.title}</h4>
+            <p class="text-slate-700">${item.content}</p>
+        `;
+                praticasContainer.appendChild(card);
+            });
+
+            // NAVEGAÇÃO CORRIGIDA
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+
+            // Criar mapeamento correto entre links e seções
+            const sectionMap = new Map();
+            navLinks.forEach(link => {
+                const sectionId = link.getAttribute('data-section');
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    sectionMap.set(section, link);
+                }
+            });
+
+            // Função melhorada para detectar seção ativa
+            function updateActiveNavigation() {
+                const scrollPosition = window.scrollY;
+                const headerHeight = document.querySelector('header').offsetHeight;
+                const offset = headerHeight + 50; // Offset adicional para melhor detecção
+
+                let activeSection = null;
+                let minDistance = Infinity;
+
+                // Encontrar a seção mais próxima do topo da viewport
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - offset;
+                    const sectionBottom = sectionTop + section.offsetHeight;
+
+                    // Verificar se a seção está visível na viewport
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                        activeSection = section;
+                    } else if (scrollPosition < sectionTop) {
+                        // Se ainda não chegamos na seção, calcular distância
+                        const distance = sectionTop - scrollPosition;
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            activeSection = section;
+                        }
+                    }
+                });
+
+                // Se estivermos no final da página, ativar a última seção
+                if (window.innerHeight + scrollPosition >= document.body.offsetHeight - 10) {
+                    activeSection = sections[sections.length - 1];
+                }
+
+                // Atualizar classes dos links
+                navLinks.forEach(link => link.classList.remove('active'));
+                if (activeSection && sectionMap.has(activeSection)) {
+                    sectionMap.get(activeSection).classList.add('active');
+                }
+            }
+
+            // Navegação suave ao clicar nos links
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-section');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const targetPosition = targetSection.offsetTop - headerHeight - 20;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+
+                        // Atualizar URL sem recarregar a página
+                        history.pushState(null, null, `#${targetId}`);
+                    }
+                });
+            });
+
+            // Detectar mudanças no scroll
+            let ticking = false;
+            function handleScroll() {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        updateActiveNavigation();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            }
+
+            window.addEventListener('scroll', handleScroll);
+
+            // Inicializar navegação baseada na URL atual
+            function initializeNavigation() {
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const targetSection = document.getElementById(hash);
+                    if (targetSection) {
+                        setTimeout(() => {
+                            const headerHeight = document.querySelector('header').offsetHeight;
+                            const targetPosition = targetSection.offsetTop - headerHeight - 20;
+                            window.scrollTo({
+                                top: targetPosition,
+                                behavior: 'smooth'
+                            });
+                        }, 100);
+                    }
+                }
+                updateActiveNavigation();
+            }
+
+            // Detectar mudanças no histórico (botão voltar/avançar)
+            window.addEventListener('popstate', updateActiveNavigation);
+
+            // Inicializar após carregamento completo
+            setTimeout(initializeNavigation, 100);
+        });
+    </script>
+
+</body>
+
+</html>

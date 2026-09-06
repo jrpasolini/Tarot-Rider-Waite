@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudo Interativo: O Arcano O Imperador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            color: #991b1b;
+            border-bottom-color: #991b1b;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .hotspot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .hotspot:hover {
+            transform: scale(1.2);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hotspot-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .tab-button.active {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body class="bg-red-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-40 shadow-md">
+        <nav class="container mx-auto px-4">
+            <ul class="flex items-center justify-center space-x-2 md:space-x-6 py-3 overflow-x-auto no-scrollbar">
+                <li><a href="#visao-geral"
+                        class="nav-link text-stone-600 hover:text-red-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Visão
+                        Geral</a></li>
+                <li><a href="#essencia"
+                        class="nav-link text-stone-600 hover:text-red-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Essência</a>
+                </li>
+                <li><a href="#correspondencias"
+                        class="nav-link text-stone-600 hover:text-red-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Correspondências</a>
+                </li>
+                <li><a href="#interpretacoes"
+                        class="nav-link text-stone-600 hover:text-red-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Interpretações</a>
+                </li>
+                <li><a href="#jornada"
+                        class="nav-link text-stone-600 hover:text-red-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">A
+                        Jornada</a></li>
+                <li><a href="#praticas"
+                        class="nav-link text-stone-600 hover:text-red-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Práticas</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="visao-geral" class="scroll-mt-20">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold text-red-900 mb-2">O Imperador: Arcano IV</h1>
+                <p class="text-lg text-stone-700 max-w-3xl mx-auto">Uma jornada interativa pela estrutura, autoridade,
+                    estabilidade e o poder da liderança que ordena o mundo material.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-red-800 mb-4 text-center">Análise Interativa da Carta
+                </h2>
+                <p class="text-center text-stone-600 mb-6">Clique ou passe o mouse sobre os pontos numerados na imagem
+                    para desvendar o simbolismo de cada elemento da carta "O Imperador" do Tarot Rider-Waite.</p>
+                <div class="relative w-full max-w-md mx-auto aspect-[278/473]">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg"
+                        alt="A carta O Imperador do Tarot Rider-Waite"
+                        class="rounded-lg w-full h-full object-cover shadow-md">
+
+                    <div id="hotspot-1" class="hotspot hotspot-pulse" style="top: 10%; left: 50%;">1</div>
+                    <div id="hotspot-2" class="hotspot" style="top: 35%; left: 18%;">2</div>
+                    <div id="hotspot-3" class="hotspot" style="top: 38%; left: 80%;">3</div>
+                    <div id="hotspot-4" class="hotspot" style="top: 55%; left: 50%;">4</div>
+                    <div id="hotspot-5" class="hotspot" style="top: 80%; left: 15%;">5</div>
+                    <div id="hotspot-6" class="hotspot" style="top: 75%; left: 85%;">6</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="essencia" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-red-800 mb-6 text-center">A Essência do Imperador</h2>
+                <div id="accordion-container" class="space-y-4">
+                </div>
+            </div>
+        </section>
+
+        <section id="correspondencias" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-red-800 mb-6 text-center">Painel de Correspondências</h2>
+                <div class="flex justify-center flex-wrap gap-2 mb-8">
+                    <button class="tab-button bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="astro">Astrologia</button>
+                    <button class="tab-button bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="kabbalah">Cabala</button>
+                    <button class="tab-button bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="cristais">Cristais</button>
+                    <button class="tab-button bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="ervas">Ervas</button>
+                </div>
+                <div id="correspondencias-content"></div>
+            </div>
+        </section>
+
+        <section id="interpretacoes" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-red-800 mb-6 text-center">Interpretações Práticas</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">A energia do Imperador se manifesta em um
+                    espectro que vai da liderança mais luminosa à sua sombra tirânica. O gráfico abaixo explora
+                    visualmente essa dualidade. Alterne entre os aspectos de "Luz" e "Sombra" para ver como as energias
+                    centrais se transformam.</p>
+                <div class="chart-container">
+                    <canvas id="keywordChart"></canvas>
+                </div>
+                <div class="text-center mt-4">
+                    <button id="toggleAspect"
+                        class="bg-red-800 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-red-900 transition">Ver
+                        Aspecto Sombra</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="jornada" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-red-800 mb-2 text-center">A Jornada do Imperador</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">O Imperador representa a estrutura e a
+                    ordem na jornada dos Arcanos Maiores. Explore como sua energia de estabilidade e liderança se
+                    relaciona com outros arcanos em uma dança cósmica de poder e responsabilidade.</p>
+                <div class="flex overflow-x-auto space-x-4 pb-4 no-scrollbar">
+                </div>
+            </div>
+        </section>
+
+        <section id="praticas" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-red-800 mb-6 text-center">Práticas e Rituais</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">Incorpore a energia do Imperador em sua
+                    vida com exercícios de foco e rituais de estabilidade. Estas práticas foram criadas para cultivar
+                    disciplina, autoridade pessoal e uma conexão profunda com seu poder de liderança.</p>
+                <div id="praticas-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 text-stone-600">
+        <p>Estudo interativo criado com base em Estudos Aprofundados sobre a carta".</p>
+        <p>&copy; 2025. Todos os direitos reservados.</p>
+    </footer>
+
+    <div id="modal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div
+            class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative transform scale-95 transition-transform">
+            <button id="closeModal"
+                class="absolute top-3 right-3 text-stone-500 hover:text-stone-800 text-2xl">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const data = {
+                hotspots: {
+                    'hotspot-1': { title: '1. A Coroa Fechada', content: 'A coroa fechada representa autoridade máxima e poder sobre o reino material. Simboliza a soberania, o controle e a capacidade de governar com sabedoria e visão estratégica.' },
+                    'hotspot-2': { title: '2. O Cetro Ankh', content: 'Em sua mão direita, o Imperador segura um cetro que se assemelha ao Ankh egípcio, símbolo da vida. Representa seu poder criativo e sua capacidade de sustentar e governar a vida em seu domínio.' },
+                    'hotspot-3': { title: '3. A Orbe Dourada', content: 'A orbe em sua mão esquerda simboliza o mundo que ele governa. Representa a totalidade de seu reino e a responsabilidade que ele carrega, mantendo a ordem e a coesão do todo.' },
+                    'hotspot-4': { title: '4. O Trono de Pedra com Carneiros', content: 'O trono de pedra simboliza a estabilidade e a permanência. As quatro cabeças de carneiro são um símbolo de Áries, representando iniciativa, liderança, determinação e a força primordial masculina.' },
+                    'hotspot-5': { title: '5. A Armadura de Aço', content: 'A armadura sob suas vestes indica que ele está sempre preparado para a batalha e para defender seu território. Simboliza proteção, resiliência e a força necessária para manter a ordem.' },
+                    'hotspot-6': { title: '6. As Montanhas Áridas', content: 'A paisagem rochosa e árida ao fundo simboliza a solidez, a austeridade e o domínio da mente sobre a natureza. Representa um ambiente onde apenas a disciplina e a vontade podem prosperar, sem espaço para o supérfluo.' },
+                },
+                essencia: [
+                    { title: 'O Pai Cósmico e a Estrutura Divina', content: 'O Imperador encarna o arquétipo do Grande Pai, a força organizadora que estabelece leis e estruturas. Ele representa a ordem, a disciplina e a autoridade necessárias para construir e sustentar a civilização. Como o número IV, ele simboliza a estabilidade, a fundação e a matéria.' },
+                    { title: 'Liderança e Manifestação do Poder', content: 'O Imperador governa através da lógica, da estratégia e da vontade. Ele transforma o potencial criativo (da Imperatriz) em um império concreto e funcional. Ensina que o verdadeiro poder vem da responsabilidade, da disciplina e da capacidade de liderar a si mesmo e aos outros.' },
+                    { title: 'Ordem, Disciplina e Poder Marciano', content: 'Regido por Áries (e seu planeta Marte), o Imperador personifica a ação, a coragem e a determinação. Ele nos lembra que a realização de grandes feitos exige planejamento, controle e a força para impor a ordem sobre o caos, estabelecendo limites claros e defendendo-os.' }
+                ],
+                correspondencias: {
+                    astro: `
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-red-800 mb-2">Áries e Marte ♈︎ ♂</h3>
+                        <p class="text-stone-700">A principal associação astrológica é com <strong>Áries</strong>, o primeiro signo do zodíaco, que representa iniciativa, liderança, coragem e ação. A energia do Imperador também é fortemente ligada ao planeta <strong>Marte</strong>, o deus da guerra, que rege a força, a determinação, a assertividade e o poder de conquista. Está ligado ao elemento <strong>Fogo</strong> (vontade, energia, ação).</p>
+                        <ul class="mt-4 space-y-2 text-stone-600">
+                           <li><strong>O Sol:</strong> Exaltado em Áries, o Sol representa o ego, a autoridade e o poder centralizador.</li>
+                           <li><strong>Estações de Poder:</strong> Associado ao início, ao poder de começar e liderar.</li>
+                        </ul>
+                    </div>
+                    <div class="text-center p-8 bg-red-50 rounded-lg">
+                       <span class="text-8xl">♈︎</span>
+                       <span class="text-8xl ml-4">♂</span>
+                    </div>
+                </div>
+            `,
+                    kabbalah: `
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-red-800 mb-2">Heh (ה) e o 15º Caminho</h3>
+                        <p class="text-stone-700">Na Cabala, O Imperador corresponde à letra hebraica <strong>Heh (ה)</strong>, que significa "janela" ou "visão". Ele percorre o <strong>15º Caminho da Árvore da Vida</strong>, que conecta Chokmah (a Sabedoria) a Tiphareth (a Beleza/Ego). Este caminho é chamado de "Inteligência Constituinte", pois estabelece a estrutura e a constituição que permite que a beleza e o ego se manifestem a partir da sabedoria primordial.</p>
+                    </div>
+                    <div class="text-center p-8 bg-red-50 rounded-lg">
+                       <span class="text-9xl font-serif">ה</span>
+                    </div>
+                </div>
+            `,
+                    cristais: `
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <img src="https://www.cristaisdecurvelo.com.br/storage/images/cache/jaspe_vermelho_rolado_800x800_1551206109.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Jaspe Vermelho</h4><p class="text-sm text-stone-600">Força vital, coragem, estabilidade e aterramento.</p>
+                    </div>
+                     <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <img src="https://www.calcita.com.br/wp-content/uploads/2023/11/cornalina-rolada.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Cornalina</h4><p class="text-sm text-stone-600">Ação, motivação, liderança e confiança.</p>
+                    </div>
+                     <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6s7qj9l1QzQ1O1W9zFh9C0r6b9u8wF_5jA&s" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Olho de Tigre</h4><p class="text-sm text-stone-600">Clareza mental, foco, poder pessoal e proteção.</p>
+                    </div>
+                </div>
+            `,
+                    ervas: `
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                     <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <img src="https://www.tuasaude.com/media/article/jj/aw/gengibre_26839_l.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Gengibre</h4><p class="text-sm text-stone-600">Energia ígnea, força pessoal, sucesso e poder.</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <img src="https://www.infoescola.com/wp-content/uploads/2010/07/pinheiro.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Pinheiro</h4><p class="text-sm text-stone-600">Força, resiliência, estrutura e autoridade.</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <img src="https://static.preparaenem.com/2022/10/folhas-louro.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Louro</h4><p class="text-sm text-stone-600">Vitória, reconhecimento, proteção e liderança.</p>
+                    </div>
+                </div>
+            `,
+                },
+                keywords: {
+                    light: {
+                        labels: ['Liderança', 'Estrutura', 'Autoridade', 'Estabilidade', 'Disciplina', 'Paternidade'],
+                        data: [10, 10, 9, 9, 8, 10],
+                        backgroundColor: 'rgba(220, 38, 38, 0.6)',
+                        borderColor: 'rgba(127, 29, 29, 1)',
+                    },
+                    shadow: {
+                        labels: ['Tirania', 'Rigidez', 'Controle', 'Inflexibilidade', 'Autoritarismo', 'Frieza'],
+                        data: [8, 9, 8, 9, 10, 7],
+                        backgroundColor: 'rgba(120, 113, 108, 0.6)',
+                        borderColor: 'rgba(68, 64, 60, 1)',
+                    }
+                },
+                jornada: [
+                    { arcano: 'III - A Imperatriz', licao: 'Recebe o potencial criativo para lhe dar forma e estrutura.' },
+                    { arcano: 'V - O Hierofante', licao: 'Transforma suas leis em tradição e sistema de crenças.' },
+                    { arcano: 'VII - O Carro', licao: 'Usa sua vontade e controle para conquistar objetivos.' },
+                    { arcano: 'IX - O Eremita', licao: 'Busca a sabedoria interior para governar com mais profundidade.' },
+                    { arcano: 'XI - A Justiça', licao: 'Compreende a importância da lei e da ordem imparcial.' },
+                    { arcano: 'XVI - A Torre', licao: 'Enfrenta a destruição de estruturas rígidas para renovar.' },
+                    { arcano: 'XIX - O Sol', licao: 'Encontra a clareza e a vitalidade para liderar com confiança.' },
+                    { arcano: 'XXI - O Mundo', licao: 'Celebra a conclusão de seu império e a maestria sobre a matéria.' },
+                ],
+                praticas: [
+                    { title: 'Meditação do Trono Interior', content: 'Visualize-se em um trono de pedra, sentindo a estabilidade e a força em sua coluna. Assuma seu poder pessoal e tome decisões com clareza e autoridade.' },
+                    { title: 'Ritual de Estrutura e Foco', content: 'Em uma terça-feira, acenda uma vela vermelha. Escreva suas metas em um papel de forma clara e objetiva. Coloque o papel sob a vela e medite sobre a disciplina necessária para alcançá-las.' },
+                    { title: 'Exercício do Planejamento Estratégico', content: 'Escolha uma área da sua vida que precisa de ordem. Dedique tempo para criar um plano de ação detalhado, com passos práticos e prazos, ativando sua capacidade de liderança e organização.' }
+                ]
+            };
+
+            const modal = document.getElementById('modal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const modalContent = document.getElementById('modal-content');
+
+            document.querySelectorAll('.hotspot').forEach(hotspot => {
+                hotspot.addEventListener('click', function () {
+                    const hotspotId = this.id;
+                    const dataToShow = data.hotspots[hotspotId];
+                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-red-800 mb-2">${dataToShow.title}</h3><p class="text-stone-700">${dataToShow.content}</p>`;
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    modal.querySelector('div > div').classList.remove('scale-95');
+                });
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.querySelector('div > div').classList.add('scale-95');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModalBtn.click();
+                }
+            });
+
+            const accordionContainer = document.getElementById('accordion-container');
+            data.essencia.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.innerHTML = `
+            <button class="w-full text-left p-4 bg-red-100 rounded-lg flex justify-between items-center hover:bg-red-200 transition">
+                <span class="font-semibold text-red-900">${item.title}</span>
+                <span class="transform transition-transform text-red-800 text-xl font-bold">+</span>
+            </button>
+            <div class="overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                <p class="p-4 text-stone-700 bg-red-50 rounded-b-lg">${item.content}</p>
+            </div>
+        `;
+                accordionItem.querySelector('button').addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('span:last-child');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        document.querySelectorAll('#accordion-container .overflow-hidden').forEach(el => {
+                            el.style.maxHeight = null;
+                            el.previousElementSibling.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+                        });
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(45deg)';
+                    }
+                });
+                accordionContainer.appendChild(accordionItem);
+            });
+
+            const correspondenciasContent = document.getElementById('correspondencias-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            function updateCorrespondencias(tab) {
+                correspondenciasContent.innerHTML = data.correspondencias[tab];
+                tabButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tab);
+                });
+            }
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => updateCorrespondencias(button.dataset.tab));
+            });
+            updateCorrespondencias('astro');
+
+            const ctx = document.getElementById('keywordChart').getContext('2d');
+            let keywordChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: data.keywords.light.labels,
+                    datasets: [{
+                        data: data.keywords.light.data,
+                        backgroundColor: data.keywords.light.backgroundColor,
+                        borderColor: data.keywords.light.borderColor,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            pointLabels: { font: { size: 14 } },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ` ${context.label}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            let isLight = true;
+            const toggleBtn = document.getElementById('toggleAspect');
+            toggleBtn.addEventListener('click', () => {
+                isLight = !isLight;
+                const aspect = isLight ? 'light' : 'shadow';
+                const aspectData = data.keywords[aspect];
+                keywordChart.data.labels = aspectData.labels;
+                keywordChart.data.datasets[0].data = aspectData.data;
+                keywordChart.data.datasets[0].backgroundColor = aspectData.backgroundColor;
+                keywordChart.data.datasets[0].borderColor = aspectData.borderColor;
+                keywordChart.update();
+
+                toggleBtn.textContent = isLight ? 'Ver Aspecto Sombra' : 'Ver Aspecto Luz';
+                toggleBtn.classList.toggle('bg-red-800', isLight);
+                toggleBtn.classList.toggle('bg-stone-700', !isLight);
+            });
+
+            const jornadaContainer = document.querySelector('#jornada .flex');
+            data.jornada.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "flex-none w-60 bg-red-50 p-4 rounded-lg shadow-sm text-center";
+                card.innerHTML = `
+            <p class="font-bold text-lg text-red-900">${item.arcano}</p>
+            <p class="text-stone-600 text-sm mt-1">${item.licao}</p>
+        `;
+                jornadaContainer.appendChild(card);
+            });
+
+            const praticasContainer = document.getElementById('praticas-container');
+            data.praticas.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-red-100/50 p-6 rounded-xl shadow-sm";
+                card.innerHTML = `
+            <h4 class="font-bold text-lg text-red-900 mb-2">${item.title}</h4>
+            <p class="text-stone-700">${item.content}</p>
+        `;
+                praticasContainer.appendChild(card);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+
+            function changeActiveLink() {
+                let index = sections.length;
+                while (--index && window.scrollY + 100 < sections[index].offsetTop) { }
+
+                navLinks.forEach((link) => link.classList.remove('active'));
+                if (index >= 0 && navLinks[index]) {
+                    navLinks[index].classList.add('active');
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            window.addEventListener('scroll', changeActiveLink);
+            changeActiveLink();
+
+        });
+    </script>
+
+</body>
+
+</html>

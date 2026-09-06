@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudo Interativo: O Arcano A Imperatriz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a 'Thematic Study Hub' to transform the linear PDF into an engaging, non-linear exploration of 'A Imperatriz'. A main sticky navigation allows users to jump to key themes: 'Visão Geral' (with an interactive card analysis), 'Essência' (core meanings), 'Correspondências' (an interactive dashboard for astrology, kabbalah, crystals, etc.), 'Interpretações' (practical meanings with a keyword chart), 'A Jornada' (a visual timeline of the Major Arcana), and 'Práticas' (meditations/rituals). This structure empowers users to control their learning path, prioritizing active discovery and visual engagement over passive reading, which is more suitable for the rich, multi-faceted nature of the source material. -->
+    <!-- Visualization & Content Choices: 1. Card Analysis: Report Info (Symbol Meanings) -> Goal (Inform/Engage) -> Method (Interactive hotspots on card image) -> Interaction (Click/Hover reveals text) -> Justification (Promotes active discovery) -> Library (Vanilla JS). 2. Correspondences: Report Info (Lists of crystals, herbs, etc.) -> Goal (Organize) -> Method (Filterable card grid) -> Interaction (Buttons filter content) -> Justification (Manages information density) -> Library (Vanilla JS). 3. Keywords: Report Info (Positive/Negative keywords) -> Goal (Compare/Inform) -> Method (Polar Area Chart) -> Interaction (Toggle between Light/Shadow aspects) -> Justification (Visually summarizes duality) -> Library (Chart.js). 4. Journey: Report Info (The Empress's Journey text) -> Goal (Show Process) -> Method (Horizontal scrolling card timeline) -> Justification (Creates a visual narrative) -> Library (HTML/Tailwind CSS). All visualizations are rendered using Canvas or structured HTML/CSS, avoiding SVG and Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            color: #a16207;
+            border-bottom-color: #a16207;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .hotspot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .hotspot:hover {
+            transform: scale(1.2);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hotspot-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .tab-button.active {
+            background-color: #fde68a;
+            color: #a16207;
+        }
+    </style>
+</head>
+
+<body class="bg-amber-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-40 shadow-md">
+        <nav class="container mx-auto px-4">
+            <ul class="flex items-center justify-center space-x-2 md:space-x-6 py-3 overflow-x-auto no-scrollbar">
+                <li><a href="#visao-geral"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Visão
+                        Geral</a></li>
+                <li><a href="#essencia"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Essência</a>
+                </li>
+                <li><a href="#correspondencias"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Correspondências</a>
+                </li>
+                <li><a href="#interpretacoes"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Interpretações</a>
+                </li>
+                <li><a href="#jornada"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">A
+                        Jornada</a></li>
+                <li><a href="#praticas"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Práticas</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="visao-geral" class="scroll-mt-20">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold text-yellow-900 mb-2">A Imperatriz: Arcano III</h1>
+                <p class="text-lg text-stone-700 max-w-3xl mx-auto">Uma jornada interativa pela abundância divina, a
+                    fertilidade criativa e o poder maternal que nutre toda a criação.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-4 text-center">Análise Interativa da Carta
+                </h2>
+                <p class="text-center text-stone-600 mb-6">Clique ou passe o mouse sobre os pontos numerados na imagem
+                    para desvendar o simbolismo de cada elemento da carta "A Imperatriz" do Tarot Rider-Waite.</p>
+                <div class="relative w-full max-w-md mx-auto aspect-[278/473]">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg"
+                        alt="A carta A Imperatriz do Tarot Rider-Waite"
+                        class="rounded-lg w-full h-full object-cover shadow-md">
+
+                    <div id="hotspot-1" class="hotspot hotspot-pulse" style="top: 12%; left: 50%;">1</div>
+                    <div id="hotspot-2" class="hotspot" style="top: 16%; left: 28%;">2</div>
+                    <div id="hotspot-3" class="hotspot" style="top: 45%; left: 60%;">3</div>
+                    <div id="hotspot-4" class="hotspot" style="top: 61%; left: 21%;">4</div>
+                    <div id="hotspot-5" class="hotspot" style="top: 30%; left: 75%;">5</div>
+                    <div id="hotspot-6" class="hotspot" style="top: 55%; left: 87%;">6</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="essencia" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">A Essência da Imperatriz
+                </h2>
+                <div id="accordion-container" class="space-y-4">
+                </div>
+            </div>
+        </section>
+
+        <section id="correspondencias" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">Painel de Correspondências
+                </h2>
+                <div class="flex justify-center flex-wrap gap-2 mb-8">
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="astro">Astrologia</button>
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="kabbalah">Cabala</button>
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="cristais">Cristais</button>
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="ervas">Ervas</button>
+                </div>
+                <div id="correspondencias-content"></div>
+            </div>
+        </section>
+
+        <section id="interpretacoes" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">Interpretações Práticas</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">A energia da Imperatriz se manifesta em um
+                    espectro que vai da abundância mais luminosa à sua sombra. O gráfico abaixo explora visualmente essa
+                    dualidade. Alterne entre os aspectos de "Luz" e "Sombra" para ver como as energias centrais se
+                    transformam.</p>
+                <div class="chart-container">
+                    <canvas id="keywordChart"></canvas>
+                </div>
+                <div class="text-center mt-4">
+                    <button id="toggleAspect"
+                        class="bg-yellow-800 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-yellow-900 transition">Ver
+                        Aspecto Sombra</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="jornada" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-2 text-center">A Jornada da Imperatriz</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">A Imperatriz representa a manifestação
+                    criativa e maternal na jornada dos Arcanos Maiores. Explore como sua energia de abundância e
+                    fertilidade se relaciona com outros arcanos em uma dança cósmica de criação e nutrição.</p>
+                <div class="flex overflow-x-auto space-x-4 pb-4 no-scrollbar">
+                </div>
+            </div>
+        </section>
+
+        <section id="praticas" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">Práticas e Rituais</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">Incorpore a energia da Imperatriz em sua
+                    vida com meditações e rituais de abundância. Estas práticas foram criadas para cultivar fertilidade,
+                    criatividade e uma conexão profunda com o poder nutritivo da natureza.</p>
+                <div id="praticas-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 text-stone-600">
+        <p>Estudo interativo criado com base em Estudos Aprofundados sobre a carta".</p>
+        <p>&copy; 2025. Todos os direitos reservados.</p>
+    </footer>
+
+    <div id="modal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div
+            class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative transform scale-95 transition-transform">
+            <button id="closeModal"
+                class="absolute top-3 right-3 text-stone-500 hover:text-stone-800 text-2xl">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const data = {
+                hotspots: {
+                    'hotspot-1': { title: '1. A Coroa de Estrelas', content: 'A coroa com doze estrelas representa os doze signos do zodíaco e os ciclos da natureza. Simboliza a conexão da Imperatriz com os ritmos cósmicos e sua autoridade sobre os ciclos de criação e renovação.' },
+                    'hotspot-2': { title: '2. O Cetro e a Orbe', content: 'O cetro encimado por uma orbe representa o poder temporal e espiritual da Imperatriz. A orbe simboliza o mundo material que ela governa com sabedoria, enquanto o cetro representa sua autoridade divina.' },
+                    'hotspot-3': { title: '3. O Vestido Florido', content: 'O vestido branco decorado com romãs simboliza a pureza maternal e a fertilidade. As romãs são símbolos antigos de abundância, fertilidade e os mistérios femininos da criação.' },
+                    'hotspot-4': { title: '4. O Escudo com Símbolo de Vênus', content: 'O escudo em forma de coração com o símbolo de Vênus representa o amor, a beleza e a atração. Mostra a conexão da Imperatriz com as forças venusianas de harmonia e criação.' },
+                    'hotspot-5': { title: '5. A Floresta Verdejante', content: 'A exuberante floresta ao fundo simboliza a abundância da natureza e a fertilidade da Terra. Representa o reino natural que a Imperatriz protege e nutre com seu poder maternal.' },
+                    'hotspot-6': { title: '6. O Riacho Cristalino', content: 'O riacho que flui pela paisagem representa as águas da vida, a intuição e as emoções fluindo livremente. Simboliza a fonte da vida que a Imperatriz canaliza para nutrir toda a criação.' },
+                },
+                essencia: [
+                    { title: 'A Mãe Cósmica e a Fertilidade Divina', content: 'A Imperatriz encarna o arquétipo da Grande Mãe, a força criativa feminina que dá origem a toda vida. Ela representa a fertilidade em todos os níveis - física, emocional, mental e espiritual. Como o número III, ela simboliza a síntese criativa que surge da união dos opostos.' },
+                    { title: 'Abundância e Manifestação Material', content: 'A Imperatriz governa o reino da manifestação material, transformando ideias em realidade tangível. Ela ensina que a verdadeira abundância vem do alinhamento com os ciclos naturais e da capacidade de nutrir aquilo que desejamos ver crescer.' },
+                    { title: 'Beleza, Harmonia e Poder Venusiano', content: 'Regida por Vênus, a Imperatriz personifica a beleza, o amor e a harmonia. Ela nos lembra que a criação deve ser um ato de amor e que a verdadeira força reside na capacidade de atrair e harmonizar, não de forçar ou dominar.' }
+                ],
+                correspondencias: {
+                    astro: `
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-yellow-800 mb-2">Vênus e Touro ♀ ♉︎</h3>
+                        <p class="text-stone-700">A principal associação astrológica é com <strong>Vênus</strong>, o planeta do amor, beleza, harmonia e atração. Sua energia é receptiva, nutritiva e criativa. A Imperatriz também está ligada ao elemento <strong>Terra</strong> (materialização, estabilidade, abundância) e ao signo de <strong>Touro</strong>, regido por Vênus, que representa a sensualidade, a fertilidade e a conexão com a natureza.</p>
+                        <ul class="mt-4 space-y-2 text-stone-600">
+                           <li><strong>Primavera:</strong> Associada ao florescimento da vida e à fertilidade da Terra.</li>
+                           <li><strong>Lua Crescente:</strong> Representa o crescimento, a expansão e a manifestação.</li>
+                        </ul>
+                    </div>
+                    <div class="text-center p-8 bg-yellow-50 rounded-lg">
+                       <span class="text-8xl">♀</span>
+                       <span class="text-8xl ml-4">♉︎</span>
+                    </div>
+                </div>
+            `,
+                    kabbalah: `
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-yellow-800 mb-2">Daleth (ד) e o 14º Caminho</h3>
+                        <p class="text-stone-700">Na Cabala, A Imperatriz corresponde à letra hebraica <strong>Daleth (ד)</strong>, que significa "porta" ou "entrada". Ela percorre o <strong>14º Caminho da Árvore da Vida</strong>, que conecta Chokmah (a Sabedoria) a Binah (o Entendimento). Este caminho é chamado de "Inteligência Iluminadora", representando a luz que permite a manifestação da sabedoria divina no mundo material.</p>
+                    </div>
+                    <div class="text-center p-8 bg-yellow-50 rounded-lg">
+                       <span class="text-9xl font-serif">ד</span>
+                    </div>
+                </div>
+            `,
+                    cristais: `
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.cristaisecia.com.br/wp-content/uploads/2019/08/quartzo-rosa-bruto.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Quartzo Rosa</h4><p class="text-sm text-stone-600">Amor incondicional, cura emocional, energia maternal.</p>
+                    </div>
+                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.cristaisecia.com.br/wp-content/uploads/2019/08/esmeralda-bruta.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Esmeralda</h4><p class="text-sm text-stone-600">Abundância, fertilidade, crescimento e renovação.</p>
+                    </div>
+                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.cristaisecia.com.br/wp-content/uploads/2019/08/pedra-da-lua-bruta.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Pedra da Lua</h4><p class="text-sm text-stone-600">Ciclos femininos, intuição, energia lunar receptiva.</p>
+                    </div>
+                </div>
+            `,
+                    ervas: `
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.tuasaude.com/media/article/tz/qh/rosa-mosqueta_52513.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Rosa</h4><p class="text-sm text-stone-600">Amor divino, beleza, abertura do coração e cura emocional.</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.tuasaude.com/media/article/tz/qh/verbena_52513.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Verbena</h4><p class="text-sm text-stone-600">Proteção maternal, purificação e conexão com o sagrado feminino.</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.tuasaude.com/media/article/tz/qh/canela_52513.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Canela</h4><p class="text-sm text-stone-600">Abundância, prosperidade e atração de energias positivas.</p>
+                    </div>
+                </div>
+            `,
+                },
+                keywords: {
+                    light: {
+                        labels: ['Abundância', 'Fertilidade', 'Criatividade', 'Nutrição', 'Beleza', 'Maternidade'],
+                        data: [10, 10, 9, 9, 8, 10],
+                        backgroundColor: 'rgba(251, 191, 36, 0.6)',
+                        borderColor: 'rgba(161, 98, 7, 1)',
+                    },
+                    shadow: {
+                        labels: ['Possessividade', 'Superficialidade', 'Dependência', 'Indulgência', 'Vaidade', 'Sufocamento'],
+                        data: [7, 8, 7, 8, 9, 7],
+                        backgroundColor: 'rgba(120, 113, 108, 0.6)',
+                        borderColor: 'rgba(68, 64, 60, 1)',
+                    }
+                },
+                jornada: [
+                    { arcano: 'II - A Sacerdotisa', licao: 'Conecta-se com a sabedoria intuitiva e receptiva.' },
+                    { arcano: 'IV - O Imperador', licao: 'Equilibra sua energia criativa com estrutura e ordem.' },
+                    { arcano: 'VI - Os Enamorados', licao: 'Explora as relações e a união dos opostos.' },
+                    { arcano: 'VIII - A Força', licao: 'Aprende a canalizar poder através da gentileza.' },
+                    { arcano: 'X - A Roda da Fortuna', licao: 'Compreende os ciclos naturais de abundância.' },
+                    { arcano: 'XIV - A Temperança', licao: 'Encontra o equilíbrio entre dar e receber.' },
+                    { arcano: 'XVII - A Estrela', licao: 'Conecta-se com a esperança e a inspiração divina.' },
+                    { arcano: 'XXI - O Mundo', licao: 'Celebra a completude e a realização material.' },
+                ],
+                praticas: [
+                    { title: 'Meditação do Jardim Interior', content: 'Visualize um jardim exuberante em seu coração, onde cada planta representa um aspecto de sua vida. Nutra-o com amor e intenção, vendo tudo florescer em abundância.' },
+                    { title: 'Ritual da Abundância Venusiana', content: 'Em uma sexta-feira, acenda uma vela verde e coloque flores frescas em sua casa. Agradeça por toda abundância em sua vida e visualize mais prosperidade chegando.' },
+                    { title: 'Banho de Rosas para Autoamor', content: 'Prepare um banho com pétalas de rosa e sal marinho. Enquanto se banha, afirme sua beleza interior e exterior, conectando-se com a energia amorosa da Imperatriz.' }
+                ]
+            };
+
+            const modal = document.getElementById('modal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const modalContent = document.getElementById('modal-content');
+
+            document.querySelectorAll('.hotspot').forEach(hotspot => {
+                hotspot.addEventListener('click', function () {
+                    const hotspotId = this.id;
+                    const dataToShow = data.hotspots[hotspotId];
+                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-yellow-800 mb-2">${dataToShow.title}</h3><p class="text-stone-700">${dataToShow.content}</p>`;
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    modal.querySelector('div > div').classList.remove('scale-95');
+                });
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.querySelector('div > div').classList.add('scale-95');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModalBtn.click();
+                }
+            });
+
+            const accordionContainer = document.getElementById('accordion-container');
+            data.essencia.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.innerHTML = `
+            <button class="w-full text-left p-4 bg-yellow-100 rounded-lg flex justify-between items-center hover:bg-yellow-200 transition">
+                <span class="font-semibold text-yellow-900">${item.title}</span>
+                <span class="transform transition-transform text-yellow-800 text-xl font-bold">+</span>
+            </button>
+            <div class="overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                <p class="p-4 text-stone-700 bg-yellow-50 rounded-b-lg">${item.content}</p>
+            </div>
+        `;
+                accordionItem.querySelector('button').addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('span:last-child');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        document.querySelectorAll('#accordion-container .overflow-hidden').forEach(el => {
+                            el.style.maxHeight = null;
+                            el.previousElementSibling.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+                        });
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(45deg)';
+                    }
+                });
+                accordionContainer.appendChild(accordionItem);
+            });
+
+            const correspondenciasContent = document.getElementById('correspondencias-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            function updateCorrespondencias(tab) {
+                correspondenciasContent.innerHTML = data.correspondencias[tab];
+                tabButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tab);
+                });
+            }
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => updateCorrespondencias(button.dataset.tab));
+            });
+            updateCorrespondencias('astro');
+
+            const ctx = document.getElementById('keywordChart').getContext('2d');
+            let keywordChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: data.keywords.light.labels,
+                    datasets: [{
+                        data: data.keywords.light.data,
+                        backgroundColor: data.keywords.light.backgroundColor,
+                        borderColor: data.keywords.light.borderColor,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            pointLabels: { font: { size: 14 } },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ` ${context.label}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            let isLight = true;
+            const toggleBtn = document.getElementById('toggleAspect');
+            toggleBtn.addEventListener('click', () => {
+                isLight = !isLight;
+                const aspect = isLight ? 'light' : 'shadow';
+                const aspectData = data.keywords[aspect];
+                keywordChart.data.labels = aspectData.labels;
+                keywordChart.data.datasets[0].data = aspectData.data;
+                keywordChart.data.datasets[0].backgroundColor = aspectData.backgroundColor;
+                keywordChart.data.datasets[0].borderColor = aspectData.borderColor;
+                keywordChart.update();
+
+                toggleBtn.textContent = isLight ? 'Ver Aspecto Sombra' : 'Ver Aspecto Luz';
+                toggleBtn.classList.toggle('bg-yellow-800', isLight);
+                toggleBtn.classList.toggle('bg-stone-700', !isLight);
+            });
+
+            const jornadaContainer = document.querySelector('#jornada .flex');
+            data.jornada.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "flex-none w-60 bg-yellow-50 p-4 rounded-lg shadow-sm text-center";
+                card.innerHTML = `
+            <p class="font-bold text-lg text-yellow-900">${item.arcano}</p>
+            <p class="text-stone-600 text-sm mt-1">${item.licao}</p>
+        `;
+                jornadaContainer.appendChild(card);
+            });
+
+            const praticasContainer = document.getElementById('praticas-container');
+            data.praticas.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-yellow-100/50 p-6 rounded-xl shadow-sm";
+                card.innerHTML = `
+            <h4 class="font-bold text-lg text-yellow-900 mb-2">${item.title}</h4>
+            <p class="text-stone-700">${item.content}</p>
+        `;
+                praticasContainer.appendChild(card);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+
+            function changeActiveLink() {
+                let index = sections.length;
+                while (--index && window.scrollY + 100 < sections[index].offsetTop) { }
+
+                navLinks.forEach((link) => link.classList.remove('active'));
+                if (index >= 0 && navLinks[index]) {
+                    navLinks[index].classList.add('active');
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            window.addEventListener('scroll', changeActiveLink);
+            changeActiveLink();
+
+        });
+    </script>
+
+</body>
+
+</html>

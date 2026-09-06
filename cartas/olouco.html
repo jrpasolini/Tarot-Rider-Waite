@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudo Interativo: O Arcano O Louco</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a 'Thematic Study Hub' to transform the linear PDF into an engaging, non-linear exploration of 'O Louco'. A main sticky navigation allows users to jump to key themes: 'Visão Geral' (with an interactive card analysis), 'Essência' (core meanings), 'Correspondências' (an interactive dashboard for astrology, kabbalah, crystals, etc.), 'Interpretações' (practical meanings with a keyword chart), 'A Jornada' (a visual timeline of the Major Arcana), and 'Práticas' (meditations/rituals). This structure empowers users to control their learning path, prioritizing active discovery and visual engagement over passive reading, which is more suitable for the rich, multi-faceted nature of the source material. -->
+    <!-- Visualization & Content Choices: 1. Card Analysis: Report Info (Symbol Meanings) -> Goal (Inform/Engage) -> Method (Interactive hotspots on card image) -> Interaction (Click/Hover reveals text) -> Justification (Promotes active discovery) -> Library (Vanilla JS). 2. Correspondences: Report Info (Lists of crystals, herbs, etc.) -> Goal (Organize) -> Method (Filterable card grid) -> Interaction (Buttons filter content) -> Justification (Manages information density) -> Library (Vanilla JS). 3. Keywords: Report Info (Positive/Negative keywords) -> Goal (Compare/Inform) -> Method (Polar Area Chart) -> Interaction (Toggle between Light/Shadow aspects) -> Justification (Visually summarizes duality) -> Library (Chart.js). 4. Journey: Report Info (The Fool's Journey text) -> Goal (Show Process) -> Method (Horizontal scrolling card timeline) -> Justification (Creates a visual narrative) -> Library (HTML/Tailwind CSS). All visualizations are rendered using Canvas or structured HTML/CSS, avoiding SVG and Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            color: #a16207;
+            border-bottom-color: #a16207;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .hotspot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .hotspot:hover {
+            transform: scale(1.2);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hotspot-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .tab-button.active {
+            background-color: #fde68a;
+            color: #a16207;
+        }
+    </style>
+</head>
+
+<body class="bg-amber-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-40 shadow-md">
+        <nav class="container mx-auto px-4">
+            <ul class="flex items-center justify-center space-x-2 md:space-x-6 py-3 overflow-x-auto no-scrollbar">
+                <li><a href="#visao-geral"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Visão
+                        Geral</a></li>
+                <li><a href="#essencia"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Essência</a>
+                </li>
+                <li><a href="#correspondencias"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Correspondências</a>
+                </li>
+                <li><a href="#interpretacoes"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Interpretações</a>
+                </li>
+                <li><a href="#jornada"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">A
+                        Jornada</a></li>
+                <li><a href="#praticas"
+                        class="nav-link text-stone-600 hover:text-yellow-800 border-b-2 border-transparent pb-2 text-sm md:text-base font-medium">Práticas</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="visao-geral" class="scroll-mt-20">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold text-yellow-900 mb-2">O Louco: Arcano Zero</h1>
+                <p class="text-lg text-stone-700 max-w-3xl mx-auto">Uma jornada interativa pelo potencial infinito, a fé
+                    inabalável e a coragem de dar o primeiro passo rumo ao desconhecido.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-4 text-center">Análise Interativa da Carta
+                </h2>
+                <p class="text-center text-stone-600 mb-6">Clique ou passe o mouse sobre os pontos numerados na imagem
+                    para desvendar o simbolismo de cada elemento da carta "O Louco" do Tarot Rider-Waite.</p>
+                <div class="relative w-full max-w-md mx-auto aspect-[278/473]">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg"
+                        alt="A carta O Louco do Tarot Rider-Waite"
+                        class="rounded-lg w-full h-full object-cover shadow-md">
+
+                    <div id="hotspot-1" class="hotspot hotspot-pulse" style="top: 10%; left: 45%;">1</div>
+                    <div id="hotspot-2" class="hotspot" style="top: 15%; left: 65%;">2</div>
+                    <div id="hotspot-3" class="hotspot" style="top: 25%; left: 83%;">3</div>
+                    <div id="hotspot-4" class="hotspot" style="top: 70%; left: 17%;">4</div>
+                    <div id="hotspot-5" class="hotspot" style="top: 65%; left: 75%;">5</div>
+                    <div id="hotspot-6" class="hotspot" style="top: 52%; left: 80%;">6</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="essencia" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">A Essência do Louco</h2>
+                <div id="accordion-container" class="space-y-4">
+                </div>
+            </div>
+        </section>
+
+        <section id="correspondencias" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">Painel de Correspondências
+                </h2>
+                <div class="flex justify-center flex-wrap gap-2 mb-8">
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="astro">Astrologia</button>
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="kabbalah">Cabala</button>
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="cristais">Cristais</button>
+                    <button
+                        class="tab-button bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-semibold transition"
+                        data-tab="ervas">Ervas</button>
+                </div>
+                <div id="correspondencias-content"></div>
+            </div>
+        </section>
+
+        <section id="interpretacoes" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">Interpretações Práticas</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">A energia do Louco se manifesta em um
+                    espectro que vai do potencial mais luminoso à sua sombra. O gráfico abaixo explora visualmente essa
+                    dualidade. Alterne entre os aspectos de "Luz" e "Sombra" para ver como as energias centrais se
+                    transformam.</p>
+                <div class="chart-container">
+                    <canvas id="keywordChart"></canvas>
+                </div>
+                <div class="text-center mt-4">
+                    <button id="toggleAspect"
+                        class="bg-yellow-800 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-yellow-900 transition">Ver
+                        Aspecto Sombra</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="jornada" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-2 text-center">A Jornada do Louco</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">O Louco é o protagonista que viaja através
+                    dos outros 21 Arcanos Maiores, aprendendo e evoluindo com cada encontro. Explore as principais
+                    etapas dessa jornada épica de desenvolvimento da consciência.</p>
+                <div class="flex overflow-x-auto space-x-4 pb-4 no-scrollbar">
+                </div>
+            </div>
+        </section>
+
+        <section id="praticas" class="scroll-mt-20 mt-12">
+            <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-yellow-800 mb-6 text-center">Práticas e Rituais</h2>
+                <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">Incorpore a energia do Louco em sua vida
+                    com meditações e rituais de transformação. Estas práticas foram criadas para cultivar coragem, fé e
+                    uma abertura confiante ao novo.</p>
+                <div id="praticas-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 text-stone-600">
+        <p>Estudo interativo criado com base no documento "O Louco: Um Estudo Aprofundado".</p>
+        <p>&copy; 2025. Todos os direitos reservados.</p>
+    </footer>
+
+    <div id="modal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div
+            class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative transform scale-95 transition-transform">
+            <button id="closeModal"
+                class="absolute top-3 right-3 text-stone-500 hover:text-stone-800 text-2xl">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const data = {
+                hotspots: {
+                    'hotspot-1': { title: '1. O Jovem Viajante e o Sol', content: 'A figura andrógina representa a alma universal. O rosto voltado para o céu demonstra fé e confiança na orientação divina. O Sol amarelo dourado simboliza a consciência iluminada e a bênção divina que acompanha a jornada.' },
+                    'hotspot-2': { title: '2. A Mochila e o Bastão', content: 'A pequena trouxa no bastão representa a bagagem essencial: não os bens materiais, mas as experiências e a sabedoria acumulada, carregadas com leveza. O bastão simboliza a vontade e o poder pessoal.' },
+                    'hotspot-3': { title: '3. A Rosa Branca', content: 'Simboliza a pureza da alma, a inocência espiritual e a beleza da simplicidade. Na alquimia, representa o estágio inicial da Grande Obra. O Louco oferece sua pureza ao universo.' },
+                    'hotspot-4': { title: '4. O Precipício', content: 'Representa o limiar entre o conhecido e o desconhecido. O Louco não o teme, pois sua fé transcende o medo. É o "salto de fé" necessário para o crescimento espiritual.' },
+                    'hotspot-5': { title: '5. O Cão Branco', content: 'Simboliza os instintos, a lealdade e a sabedoria animal que nos guiam e protegem. Ele serve como um guardião, garantindo que a jornada corajosa não se torne imprudente.' },
+                    'hotspot-6': { title: '6. As Montanhas Distantes', content: 'As montanhas azuladas no horizonte representam os objetivos espirituais, os reinos superiores da consciência. A sua distância indica que a jornada requer tempo e perseverança.' },
+                },
+                essencia: [
+                    { title: 'O Potencial Infinito do Zero', content: 'O número Zero não é vazio, mas sim um "vácuo fértil" que contém todas as possibilidades. Simboliza o estado primordial antes da manifestação, a potencialidade pura. O Louco encarna a "sabedoria inocente", a capacidade de abordar tudo com frescor, livre de preconceitos.' },
+                    { title: 'Arquétipos Universais', content: 'O Louco é o Viajante Espiritual, o Peregrino, o Místico e o Iniciado. Ele representa o arquétipo do *Puer Aeternus* (a Criança Eterna), que mantém a capacidade de maravilhamento e crescimento. Na alquimia, ele é a *prima materia*, a substância inicial pronta para a transformação.' },
+                    { title: 'Caos Criativo e Renovação', content: 'O Louco personifica o "caos criativo" – a força disruptiva necessária para quebrar estruturas estagnadas e permitir a renovação. Ele ensina que a verdadeira segurança não está na rigidez, mas na adaptabilidade e na coragem de abraçar a mudança.' }
+                ],
+                correspondencias: {
+                    astro: `
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-yellow-800 mb-2">Urano e Aquário ⛢ ♒︎</h3>
+                        <p class="text-stone-700">A principal associação astrológica é com <strong>Urano</strong>, o planeta da revolução, inovação e quebra de padrões. Sua energia é súbita, libertadora e orientada para o futuro. O Louco também está ligado ao elemento <strong>Ar</strong> (intelecto, ideias, comunicação) e ao signo de <strong>Aquário</strong>, regido por Urano, que representa o humanitarismo, a originalidade e o não convencionalismo.</p>
+                        <ul class="mt-4 space-y-2 text-stone-600">
+                           <li><strong>Primavera:</strong> Associado a novos começos e ao despertar da vida.</li>
+                           <li><strong>Lua Nova:</strong> Representa o potencial puro e o início de um novo ciclo.</li>
+                        </ul>
+                    </div>
+                    <div class="text-center p-8 bg-yellow-50 rounded-lg">
+                       <span class="text-8xl">⛢</span>
+                       <span class="text-8xl ml-4">♒︎</span>
+                    </div>
+                </div>
+            `,
+                    kabbalah: `
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-yellow-800 mb-2">Aleph (א) e o 11º Caminho</h3>
+                        <p class="text-stone-700">Na Cabala, O Louco corresponde à letra hebraica <strong>Aleph (א)</strong>, o sopro divino e o princípio primordial que une os mundos superior e inferior. Ele percorre o <strong>11º Caminho da Árvore da Vida</strong>, que conecta Kether (a Coroa, unidade pura) a Chokmah (a Sabedoria, primeiro impulso criativo). Este caminho é chamado de "Inteligência Escintilante", indicando uma sabedoria percebida por flashes de intuição.</p>
+                    </div>
+                    <div class="text-center p-8 bg-yellow-50 rounded-lg">
+                       <span class="text-9xl font-serif">א</span>
+                    </div>
+                </div>
+            `,
+                    cristais: `
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://consciousitems.com/cdn/shop/articles/leopard_skin_jasper_03_1024x1024_9d699138-6576-496d-9b27-2802ed835a54.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Jaspe Leopardo</h4><p class="text-sm text-stone-600">Coragem, espontaneidade, conexão com a natureza selvagem.</p>
+                    </div>
+                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://i.ebayimg.com/thumbs/images/g/FgUAAMXQQUpRBxTC/s-l1200.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Topázio Claro/Dourado</h4><p class="text-sm text-stone-600">Clareza espiritual, iluminação, pureza de intenção.</p>
+                    </div>
+                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://www.gemasecristais.com/wp-content/uploads/2020/09/aventurinaverde-gemasecristais_ph8.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Aventurina Verde</h4><p class="text-sm text-stone-600">Sorte, oportunidade, aventura e crescimento.</p>
+                    </div>
+                </div>
+            `,
+                    ervas: `
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://image.tuasaude.com/media/article/xk/gs/ginseng_52514.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Ginseng</h4><p class="text-sm text-stone-600">Vitalidade primordial, resiliência e energia para a jornada.</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://image.tuasaude.com/media/article/ur/tt/anis_39639.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Anis Estrelado</h4><p class="text-sm text-stone-600">Orientação espiritual, expansão e conexão com o elemento Ar.</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <img src="https://ciclovivo.com.br/wp-content/uploads/2020/06/mint-5229226_1280.jpg" class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold">Hortelã</h4><p class="text-sm text-stone-600">Renovação, vitalidade e a "mente de principiante".</p>
+                    </div>
+                </div>
+            `,
+                },
+                keywords: {
+                    light: {
+                        labels: ['Novo Começo', 'Fé', 'Liberdade', 'Aventura', 'Espontaneidade', 'Potencial'],
+                        data: [10, 10, 9, 9, 8, 10],
+                        backgroundColor: 'rgba(251, 191, 36, 0.6)',
+                        borderColor: 'rgba(161, 98, 7, 1)',
+                    },
+                    shadow: {
+                        labels: ['Fuga', 'Ingenuidade', 'Irresponsabilidade', 'Imprudência', 'Impulsividade', 'Falta de Foco'],
+                        data: [7, 8, 7, 8, 9, 7],
+                        backgroundColor: 'rgba(120, 113, 108, 0.6)',
+                        borderColor: 'rgba(68, 64, 60, 1)',
+                    }
+                },
+                jornada: [
+                    { arcano: 'I - O Mago', licao: 'Aprende sobre poder, vontade e manifestação.' },
+                    { arcano: 'IV - O Imperador', licao: 'Aprende sobre estrutura, disciplina e ordem.' },
+                    { arcano: 'VII - O Carro', licao: 'Aprende sobre determinação e controle da vontade.' },
+                    { arcano: 'IX - O Eremita', licao: 'Volta-se para dentro em busca de sabedoria interior.' },
+                    { arcano: 'XIII - A Morte', licao: 'Enfrenta a transformação radical e o desapego.' },
+                    { arcano: 'XV - O Diabo', licao: 'Confronta suas sombras, medos e apegos.' },
+                    { arcano: 'XIX - O Sol', licao: 'Alcança a clareza, a alegria e a inocência sábia.' },
+                    { arcano: 'XXI - O Mundo', licao: 'Completa o ciclo, alcançando integração e realização.' },
+                ],
+                praticas: [
+                    { title: 'Meditação da Rosa Branca', content: 'Visualize a rosa branca em seu coração, representando pureza de intenção. Deixe sua fragrância limpar pensamentos e emoções, abrindo espaço para o novo.' },
+                    { title: 'Ritual da Mochila Sagrada', content: 'Crie uma pequena mochila simbólica contendo apenas o que é essencial para sua jornada espiritual. Pratique o desapego do que não serve mais.' },
+                    { title: 'Caminhada do Louco', content: 'Faça uma caminhada sem destino, deixando a intuição guiar seus passos. Observe as sincronicidades e mensagens que o caminho revela.' }
+                ]
+            };
+
+            const modal = document.getElementById('modal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const modalContent = document.getElementById('modal-content');
+
+            document.querySelectorAll('.hotspot').forEach(hotspot => {
+                hotspot.addEventListener('click', function () {
+                    const hotspotId = this.id;
+                    const dataToShow = data.hotspots[hotspotId];
+                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-yellow-800 mb-2">${dataToShow.title}</h3><p class="text-stone-700">${dataToShow.content}</p>`;
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    modal.querySelector('div > div').classList.remove('scale-95');
+                });
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.querySelector('div > div').classList.add('scale-95');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModalBtn.click();
+                }
+            });
+
+            const accordionContainer = document.getElementById('accordion-container');
+            data.essencia.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.innerHTML = `
+            <button class="w-full text-left p-4 bg-yellow-100 rounded-lg flex justify-between items-center hover:bg-yellow-200 transition">
+                <span class="font-semibold text-yellow-900">${item.title}</span>
+                <span class="transform transition-transform text-yellow-800 text-xl font-bold">+</span>
+            </button>
+            <div class="overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                <p class="p-4 text-stone-700 bg-yellow-50 rounded-b-lg">${item.content}</p>
+            </div>
+        `;
+                accordionItem.querySelector('button').addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('span:last-child');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        document.querySelectorAll('#accordion-container .overflow-hidden').forEach(el => {
+                            el.style.maxHeight = null;
+                            el.previousElementSibling.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+                        });
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(45deg)';
+                    }
+                });
+                accordionContainer.appendChild(accordionItem);
+            });
+
+            const correspondenciasContent = document.getElementById('correspondencias-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            function updateCorrespondencias(tab) {
+                correspondenciasContent.innerHTML = data.correspondencias[tab];
+                tabButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tab);
+                });
+            }
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => updateCorrespondencias(button.dataset.tab));
+            });
+            updateCorrespondencias('astro');
+
+            const ctx = document.getElementById('keywordChart').getContext('2d');
+            let keywordChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: data.keywords.light.labels,
+                    datasets: [{
+                        data: data.keywords.light.data,
+                        backgroundColor: data.keywords.light.backgroundColor,
+                        borderColor: data.keywords.light.borderColor,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            pointLabels: { font: { size: 14 } },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ` ${context.label}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            let isLight = true;
+            const toggleBtn = document.getElementById('toggleAspect');
+            toggleBtn.addEventListener('click', () => {
+                isLight = !isLight;
+                const aspect = isLight ? 'light' : 'shadow';
+                const aspectData = data.keywords[aspect];
+                keywordChart.data.labels = aspectData.labels;
+                keywordChart.data.datasets[0].data = aspectData.data;
+                keywordChart.data.datasets[0].backgroundColor = aspectData.backgroundColor;
+                keywordChart.data.datasets[0].borderColor = aspectData.borderColor;
+                keywordChart.update();
+
+                toggleBtn.textContent = isLight ? 'Ver Aspecto Sombra' : 'Ver Aspecto Luz';
+                toggleBtn.classList.toggle('bg-yellow-800', isLight);
+                toggleBtn.classList.toggle('bg-stone-700', !isLight);
+            });
+
+            const jornadaContainer = document.querySelector('#jornada .flex');
+            data.jornada.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "flex-none w-60 bg-yellow-50 p-4 rounded-lg shadow-sm text-center";
+                card.innerHTML = `
+            <p class="font-bold text-lg text-yellow-900">${item.arcano}</p>
+            <p class="text-stone-600 text-sm mt-1">${item.licao}</p>
+        `;
+                jornadaContainer.appendChild(card);
+            });
+
+            const praticasContainer = document.getElementById('praticas-container');
+            data.praticas.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-yellow-100/50 p-6 rounded-xl shadow-sm";
+                card.innerHTML = `
+            <h4 class="font-bold text-lg text-yellow-900 mb-2">${item.title}</h4>
+            <p class="text-stone-700">${item.content}</p>
+        `;
+                praticasContainer.appendChild(card);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+
+            function changeActiveLink() {
+                let index = sections.length;
+                while (--index && window.scrollY + 100 < sections[index].offsetTop) { }
+
+                navLinks.forEach((link) => link.classList.remove('active'));
+                if (index >= 0 && navLinks[index]) {
+                    navLinks[index].classList.add('active');
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            window.addEventListener('scroll', changeActiveLink);
+            changeActiveLink();
+
+        });
+    </script>
+
+</body>
+
+</html>
