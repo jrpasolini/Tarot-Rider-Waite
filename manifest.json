@@ -1,0 +1,11 @@
+{
+  "name": "Almanaque de Tarot Rider-Waite",
+  "short_name": "Tarot",
+  "description": "Tarot Rider-Waite — estudo, contemplação e tiragens intuitivas",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a120b",
+  "theme_color": "#6b3f2a",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR"
+}
